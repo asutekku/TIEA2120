@@ -1,5 +1,5 @@
 # TIEA2120
-Source code for the assignments for the course TIEA210.
+Source code for the assignments of the course TIEA210.
 
 I'm not responsible for any of the harm the code you might see in this repository causes.
 
