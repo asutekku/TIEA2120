@@ -118,7 +118,7 @@ class Controller {
         let form: HTMLFormElement = util.getByID("form_lisaaJoukkue");
         let formData = new FormData(form);
         let skip: boolean = false;
-        let joukkue = {};
+        let joukkue:Joukkue;
         if (!create.editMode) {
             joukkue.jasenet = [];
             formData.forEach(function (value, key) {
@@ -141,17 +141,13 @@ class Controller {
                 form.reset();
             }
         } else {
-            let team = util.getJoukkueet(data)[Controller.teamIndex];
+            let team: Joukkue = util.getJoukkueet(data)[Controller.teamIndex];
             team.nimi = util.getByID("input_1_0").value;
             team.jasenet = [];
-            for (let jasenInput of document.getElementsByTagName("legend")[1].children){
+            for (let jasenInput of document.getElementsByTagName("legend")[1].children) {
                 team.jasenet.push(jasenInput.value);
             }
-            util.getJoukkueet(data)[Controller.teamIndex] = team;
-            form.reset(),
-            util.removeEl("tulosTable")
-            create.table(util.getJoukkueet(data));
-            create.toggleEditButtons();
+            Controller.updateJoukkueet(team,form);
         }
     }
 
@@ -167,8 +163,8 @@ class Controller {
         util.getByID("joukkueButton").disabled = false;
     }
 
-    static formEmpty(form):boolean {
-        return util.mapForm(form).map(x => x.value !== "").length<=0;
+    static formEmpty(form): boolean {
+        return util.mapForm(form).map(x => x.value !== "").length <= 0;
     }
 
     static setValidations(object) {
@@ -180,8 +176,12 @@ class Controller {
         };
     }
 
-    static updateJoukkueet(array, element): void {
-        let rows = document.getElementsByTagName("tr");
+    static updateJoukkueet(team,form): void {
+        util.getJoukkueet(data)[Controller.teamIndex] = team;
+        form.reset();
+        util.removeEl("tulosTable");
+        create.table(util.getJoukkueet(data));
+        create.toggleEditButtons();
     }
 
     static editJoukkue(jj) {
@@ -205,10 +205,6 @@ class Controller {
         } else {
             window.alert("Please finish editing before selecting a new team");
         }
-    }
-
-    static updateJoukkueet(){
-        create.table(util.getJoukkueet(data));
     }
 }
 
@@ -600,7 +596,9 @@ class util {
 
     static removeEl(elemID) {
         let elem = util.getByID(elemID);
-        if (elem.parentNode) {elem.parentNode.removeChild(elem);}
+        if (elem.parentNode) {
+            elem.parentNode.removeChild(elem);
+        }
     }
 }
 
