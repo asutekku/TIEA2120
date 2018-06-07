@@ -62,6 +62,7 @@ class Rasti {
  */
 class Controller {
     static teamIndex: number;
+    public static formAmount: number = 2;
 
     /**
      * Creates a new rasti and saves it to rastis
@@ -96,7 +97,7 @@ class Controller {
         let skip: boolean = false;
         if (!create.editMode) {
             let joukkue: Joukkue = new Joukkue(util.getByID('input_1_0').value, '00:00:00', [], util.randomInt(16), '2h', 0);
-            formData.forEach(function(value, key) {
+            formData.forEach(function (value, key) {
                 if (key.startsWith('jasen')) {
                     joukkue.jasenet.push(value);
                 } else {
@@ -156,10 +157,10 @@ class Controller {
      * @param object - Object to set the validation to
      */
     static setValidations(object) {
-        object.onfocusout = function() {
+        object.onfocusout = function () {
             Controller.validateJoukkueForm();
         };
-        object.oninput = function() {
+        object.oninput = function () {
             Controller.validateJoukkueForm();
         };
     }
@@ -194,8 +195,14 @@ class Controller {
                 }
             }
             let jasenCount = 1;
-            for (let jasen of team.jasenet) {
-                util.getByID('input_1_' + jasenCount).value = jasen.toString();
+            for (let i = 0; i < team.jasenet.length; i++) {
+                if (i > 1) {
+                    this.formAmount++;
+                    create.formRow(util.getByID('jasenet_fieldset'), 'Jäsen ' + (this.formAmount), false, true, util.getByID('p_jasenButton'), true);
+                    util.getByID('input_1_' + jasenCount).value = team.jasenet[i].toString();
+                } else {
+                    util.getByID('input_1_' + jasenCount).value = team.jasenet[i].toString();
+                }
                 jasenCount++;
             }
             util.getByID('input_1_0').value = team.nimi;
@@ -218,10 +225,15 @@ class create {
     static createEditButtons() {
         create.submitFormButton(util.getByTag('fieldset')[1], 'editButton', 'Tallenna', false);
         create.submitFormButton(util.getByTag('fieldset')[1], 'cancelButton', 'Peruuta', true);
-        util.getByID('cancelButton').onclick = function() {
+        util.getByID('cancelButton').onclick = function () {
+            if (Controller.formAmount > 2) {
+                for (let i = 2; i < Controller.formAmount; i++)
+                    util.removeEl('input_1_' + i);
+            }
             let form: HTMLFormElement = util.getByID('form_lisaaJoukkue');
             document.getElementsByTagName('legend')[1].textContent = 'Uusi joukkue';
             form.reset();
+            Controller.formAmount = 2;
             create.toggleEditButtons();
         };
     }
@@ -297,7 +309,7 @@ class create {
                 form.addEventListener('submit', Controller.saveJoukkue);
             }
             this.formRow(fieldSet, 'Nimi', true, false, false, true);
-            let fieldSetJasenet: HTMLElement = this.element('fieldSet');
+            let fieldSetJasenet: HTMLElement = this.element('fieldSet', '', 'jasenet_fieldset');
             let legendJasenet: HTMLElement = this.element('legend', 'Jäsenet');
             fieldSet.appendChild(fieldSetJasenet);
             fieldSetJasenet.appendChild(legendJasenet);
@@ -305,9 +317,10 @@ class create {
             this.formRow(fieldSetJasenet, 'Jäsen 2', false, false, false, true);
             let buttonRow = this.submitFormButton(fieldSetJasenet, 'jasenButton', 'Lisää jäsen', true);
             let jasenMaara = 2;
-            util.getByID('jasenButton').onclick = function() {
+            util.getByID('jasenButton').onclick = function () {
+                Controller.formAmount++;
                 jasenMaara++;
-                create.formRow(fieldSetJasenet, 'Jasen ' + jasenMaara, false, true, buttonRow);
+                create.formRow(fieldSetJasenet, 'Jasen ' + Controller.formAmount, false, true, buttonRow);
             };
             let joukkueButton = this.submitFormButton(fieldSet, 'joukkueButton', 'Lisää joukkue');
             util.getByID('joukkueButton').disabled = true;
@@ -342,6 +355,7 @@ class create {
      */
     static submitFormButton(appendable, id, inputLabel, disableSubmit?) {
         let row: HTMLParagraphElement = this.element('p');
+        row.id = 'p_' + id;
         let button = this.element('button', inputLabel);
         if (!disableSubmit) button.type = 'submit';
         button.name = id;
@@ -359,7 +373,6 @@ class create {
      * @returns {HTMLParagraphElement} - Returns the input inside a p
      */
     static input(inputLabel, required?, validate?) {
-        let p: HTMLParagraphElement = this.element('p');
         let label: HTMLLabelElement = this.element('label', inputLabel + ': ');
         let input = this.element('input');
         let inputID = 'input_' + this.formID + '_' + this.inputID;
@@ -373,8 +386,7 @@ class create {
         input.class = 'formInput';
         this.inputID++;
         label.appendChild(input);
-        p.appendChild(label);
-        return p;
+        return label;
     }
 
     /**
@@ -455,7 +467,7 @@ class util {
      * @param property - Value to sort from
      */
     static sortArrayProperty(arr, property) {
-        arr.sort(function(a, b) {
+        arr.sort(function (a, b) {
             let itemA = a[property].toUpperCase(); // ignore upper and lowercase
             let itemB = b[property].toUpperCase(); // ignore upper and lowercase
             if (itemA < itemB) return -1;
@@ -482,14 +494,28 @@ class util {
                 x = rows[i].getElementsByTagName('td')[col];
                 y = rows[i + 1].getElementsByTagName('td')[col];
                 if (dir == 'asc') {
-                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                        shouldSwitch = true;
-                        break;
+                    if (!this.startsWithNumber(x.textContent)) {
+                        if (x.textContent.toLowerCase() > y.textContent.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else {
+                        if (parseInt(x.textContent) > parseInt(y.textContent)) {
+                            shouldSwitch = true;
+                            break;
+                        }
                     }
                 } else if (dir == 'desc') {
-                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                        shouldSwitch = true;
-                        break;
+                    if (!this.startsWithNumber(x.textContent)) {
+                        if (x.textContent.toLowerCase() < y.textContent.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else {
+                        if (parseInt(x.textContent) < parseInt(y.textContent)) {
+                            shouldSwitch = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -584,7 +610,7 @@ class util {
      */
     static getKoodit(rastiArr) {
         return this.getRastit()
-            .filter(function(e) {
+            .filter(function (e) {
                 return rastiArr.indexOf(e.id.toString()) > -1;
             })
             .map(x => x.koodi);
@@ -635,10 +661,14 @@ class util {
      */
     static parseArrayToInt(arr) {
         return arr
-            .filter(function(x) {
+            .filter(function (x) {
                 return /^\d/.test(x);
             })
             .map(x => parseInt(x));
+    }
+
+    static insertAfter(newNode, referenceNode) {
+        referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
     }
 
     /**
@@ -648,7 +678,7 @@ class util {
      */
     static getAika(team) {
         let aikaString = '00:00:00';
-        const kaydytRastit = this.getKaydytRastit(team).filter(function(rasti) {
+        const kaydytRastit = this.getKaydytRastit(team).filter(function (rasti) {
             return rasti.aika !== '';
         });
         const ekaRasti = kaydytRastit.shift();
@@ -683,7 +713,7 @@ class util {
      */
     static getMatka(team) {
         let matka = 0;
-        const kaydytRastit = util.getKaydytRastit(team).filter(function(rasti) {
+        const kaydytRastit = util.getKaydytRastit(team).filter(function (rasti) {
             return rasti.aika !== '';
         });
         for (let i = 0; i < kaydytRastit.length - 1; i++) {
@@ -691,7 +721,8 @@ class util {
             let rasti2 = util.getMatchingRasti(kaydytRastit[i + 1].rasti);
             try {
                 matka += util.getDistanceFromLatLonInKm(rasti1.lat, rasti1.lon, rasti2.lat, rasti2.lon);
-            } catch (err) {}
+            } catch (err) {
+            }
         }
         return Math.floor(matka);
     }
@@ -721,6 +752,24 @@ class util {
      */
     static deg2rad(deg) {
         return deg * (Math.PI / 180);
+    }
+
+    /**
+     * Checks if the string includes a number
+     * @param myString - String to check
+     * @returns {boolean} - Whether it returns true or false
+     */
+    static hasNumber(myString) {
+        return /\d/.test(myString);
+    }
+
+    /**
+     * Checks if the string starts with a number
+     * @param myString - String to check
+     * @returns {boolean} - Whether it returns true or false
+     */
+    static startsWithNumber(myString){
+        return /^\d/.test(myString;)
     }
 
     /**
@@ -774,6 +823,6 @@ class util {
 /**
  * Runs when everything has loaded
  */
-window.onload = function() {
+window.onload = function () {
     TulosPalvelu.main();
 };
