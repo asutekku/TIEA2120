@@ -62,7 +62,7 @@ class Rasti {
  */
 class Controller {
     static teamIndex: number;
-    public static formAmount: number = 2;
+    public formAmount: number = 2;
 
     /**
      * Creates a new rasti and saves it to rastis
@@ -98,9 +98,10 @@ class Controller {
         if (!create.editMode) {
             let joukkue: Joukkue = new Joukkue(util.getByID('input_1_0').value, '00:00:00', [], util.randomInt(16), '2h', 0);
             formData.forEach(function (value, key) {
-                if (key.startsWith('jasen')) {
+                if (key.startsWith('jäsen')) {
                     joukkue.jasenet.push(value);
                 } else {
+                    console.log(key);
                     joukkue[key] = value;
                 }
             });
@@ -114,6 +115,11 @@ class Controller {
                 let joukkueet = util.getJoukkueet(data);
                 let newRow = create.teamRow(joukkueet[joukkueet.length - 1]);
                 util.getByID('tulosTable').appendChild(create.teamRow(joukkue));
+                if (Controller.formAmount > 2) {
+                    for (let i = 2; i < Controller.formAmount; i++)
+                        util.removeEl('p_input_1_' + (i+1));
+                }
+                Controller.formAmount = 2;
                 form.reset();
             }
         } else {
@@ -189,7 +195,6 @@ class Controller {
             let team = {};
             for (let i = 0; i < joukkueet.length; i++) {
                 if (joukkueet[i].nimi === jj) {
-                    console.log(i);
                     Controller.teamIndex = i;
                     team = joukkueet[i];
                 }
@@ -197,14 +202,13 @@ class Controller {
             let jasenCount = 1;
             for (let i = 0; i < team.jasenet.length; i++) {
                 if (i > 1) {
-                    this.formAmount++;
                     create.formRow(util.getByID('jasenet_fieldset'), 'Jäsen ' + (this.formAmount), false, true, util.getByID('p_jasenButton'), true);
-                    util.getByID('input_1_' + jasenCount).value = team.jasenet[i].toString();
+                    util.getByID('input_1_' + Controller.formAmount).value = team.jasenet[i].toString();
                 } else {
-                    util.getByID('input_1_' + jasenCount).value = team.jasenet[i].toString();
+                    util.getByID('input_1_' + Controller.formAmount-1).value = team.jasenet[i].toString();
                 }
-                jasenCount++;
             }
+            jasenCount = 1;
             util.getByID('input_1_0').value = team.nimi;
         } else {
             window.alert('Please finish editing before selecting a new team');
@@ -228,7 +232,7 @@ class create {
         util.getByID('cancelButton').onclick = function () {
             if (Controller.formAmount > 2) {
                 for (let i = 2; i < Controller.formAmount; i++)
-                    util.removeEl('input_1_' + i);
+                    util.removeEl('p_input_1_' + (i+1));
             }
             let form: HTMLFormElement = util.getByID('form_lisaaJoukkue');
             document.getElementsByTagName('legend')[1].textContent = 'Uusi joukkue';
@@ -340,6 +344,7 @@ class create {
      */
     static formRow(appendable, inputLabel: string, required?, before?: boolean, beforeElement?, validate?) {
         let row = this.element('p');
+        row.id =  'p_input_' + this.formID + '_' + this.inputID;
         row.appendChild(this.input(inputLabel, required, validate));
         if (before) appendable.insertBefore(row, beforeElement);
         else appendable.appendChild(row);
@@ -769,7 +774,7 @@ class util {
      * @returns {boolean} - Whether it returns true or false
      */
     static startsWithNumber(myString){
-        return /^\d/.test(myString;)
+        return /^\d/.test(myString);
     }
 
     /**
