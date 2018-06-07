@@ -384,17 +384,25 @@ class create {
      */
     static table(arr) {
         let joukkueet: any = arr;
-        util.sortTable(joukkueet, 'sarja');
+        util.sortArrayProperty(joukkueet, 'sarja');
         let tulosTable: HTMLTableElement = create.element('table', '', 'tulosTable');
         let tulosCaption: HTMLTableCaptionElement = document.createElement('caption');
         let firstRow: HTMLTableRowElement = document.createElement('tr');
         let sarjaHeader: HTMLTableHeaderCellElement = this.element('th', 'Sarja');
-        sarjaHeader.addEventListener('onclick', util.sortTable(arr, 'sarja'), false);
+        sarjaHeader.addEventListener('click', (e: Event) => util.sortTable(tulosTable, 0));
         firstRow.appendChild(sarjaHeader);
-        firstRow.appendChild(this.element('th', 'Joukkue'));
-        firstRow.appendChild(this.element('th', 'Pisteet'));
-        firstRow.appendChild(this.element('th', 'Aika'));
-        firstRow.appendChild(this.element('th', 'Matka'));
+        let joukkueHeader = this.element('th', 'Joukkue');
+        joukkueHeader.addEventListener('click', (e: Event) => util.sortTable(tulosTable, 1));
+        firstRow.appendChild(joukkueHeader);
+        let pisteHeader = this.element('th', 'Pisteet');
+        pisteHeader.addEventListener('click', (e: Event) => util.sortTable(tulosTable, 2));
+        firstRow.appendChild(pisteHeader);
+        let aikaHeader = this.element('th', 'Aika');
+        aikaHeader.addEventListener('click', (e: Event) => util.sortTable(tulosTable, 3));
+        firstRow.appendChild(aikaHeader);
+        let matkaHeader = this.element('th', 'Matka');
+        matkaHeader.addEventListener('click', (e: Event) => util.sortTable(tulosTable, 4));
+        firstRow.appendChild(matkaHeader);
         tulosCaption.textContent = 'Tulokset';
         tulosTable.appendChild(tulosCaption);
         tulosTable.appendChild(firstRow);
@@ -425,7 +433,6 @@ class create {
         teamAh.id = 'a_' + team.nimi;
         row.appendChild(seriesEl);
         row.appendChild(teamEl);
-        //teamEl.textContent += '\n';
         teamEl.appendChild(teamAh);
         teamEl.appendChild(document.createElement('br'));
         teamEl.appendChild(document.createTextNode(jasenString));
@@ -447,7 +454,7 @@ class util {
      * @param arr - Array to be sorted
      * @param property - Value to sort from
      */
-    static sortTable(arr, property) {
+    static sortArrayProperty(arr, property) {
         arr.sort(function(a, b) {
             let itemA = a[property].toUpperCase(); // ignore upper and lowercase
             let itemB = b[property].toUpperCase(); // ignore upper and lowercase
@@ -458,12 +465,54 @@ class util {
     }
 
     /**
+     * Table sorting function taken form w3c and edited a bit
+     * @param ediTable - Table to edit
+     * @param col - Column to sort by
+     */
+    static sortTable(ediTable, col) {
+        let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = ediTable;
+        switching = true;
+        dir = 'asc';
+        while (switching) {
+            switching = false;
+            rows = table.getElementsByTagName('tr');
+            for (i = 1; i < rows.length - 1; i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName('td')[col];
+                y = rows[i + 1].getElementsByTagName('td')[col];
+                if (dir == 'asc') {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == 'desc') {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (switchcount == 0 && dir == 'asc') {
+                    dir = 'desc';
+                    switching = true;
+                }
+            }
+        }
+    }
+
+    /**
      * Returns the joukkueet in a nice array
      * @param data-  The json object
      * @returns {Joukkue[]} - Returns the joukkeet as Joukkue array
      */
     static getJoukkueet(data) {
-        let arr:Joukkue[] = [];
+        let arr: Joukkue[] = [];
         for (let i = 0; i < data.sarjat.length; i++) {
             for (let j = 0; j < data.sarjat[i].joukkueet.length; j++) {
                 let joukkue = new Joukkue(
@@ -507,7 +556,7 @@ class util {
      * @returns {number} - Random integer
      */
     static randomInt(length): number {
-        return Math.floor(Math.pow(10,length - 1) + Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1));
+        return Math.floor(Math.pow(10, length - 1) + Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1));
     }
 
     /**
@@ -623,7 +672,7 @@ class util {
      * @param rastiID - Id to check
      * @returns {any} - returns all matching rastit
      */
-    static getMatchingRasti(rastiID:string) {
+    static getMatchingRasti(rastiID: string) {
         return util.rastit.filter(rasti => rasti.id == rastiID)[0];
     }
 

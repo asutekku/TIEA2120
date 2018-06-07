@@ -3,7 +3,8 @@
     "outDir": "./viikko2/build",
     "module": "amd",
     "allowJs": true,
-    "target": "es2016"
+    "target": "es2016",
+    "removeComments": false
   },
   "include": [
     "./viikko2/*"
