@@ -11,68 +11,20 @@ class TulosPalvelu {
 }
 
 class Joukkue {
-    get pisteet(): number {
-        return this._pisteet;
-    }
-
-    set pisteet(value: number) {
-        this._pisteet = value;
-    }
-
-    get sarja(): string {
-        return this._sarja;
-    }
-
-    set sarja(value: string) {
-        this._sarja = value;
-    }
-
-    get id(): number {
-        return this._id;
-    }
-
-    set id(value: number) {
-        this._id = value;
-    }
-
-    get jasenet(): string[] {
-        return this._jasenet;
-    }
-
-    set jasenet(value: string[]) {
-        this._jasenet = value;
-    }
-
-    get last(): string {
-        return this._last;
-    }
-
-    set last(value: string) {
-        this._last = value;
-    }
-
-    get nimi(): string {
-        return this._nimi;
-    }
-
-    set nimi(value: string) {
-        this._nimi = value;
-    }
-
-    private _sarja: string;
-    private _id: number;
-    private _jasenet: string[];
-    private _last: string;
-    private _nimi: string;
-    private _pisteet: number;
+    public sarja: string;
+    public id: number;
+    public jasenet: string[];
+    public last: string;
+    public nimi: string;
+    public pisteet: number;
 
     constructor(nimi, last, jasenet, id, sarja, pisteet) {
-        this._nimi = nimi;
-        this._last = last;
-        this._jasenet = jasenet;
-        this._id = id;
-        this._sarja = sarja;
-        this._pisteet = pisteet;
+        this.nimi = nimi;
+        this.last = last;
+        this.jasenet = jasenet;
+        this.id = id;
+        this.sarja = sarja;
+        this.pisteet = pisteet;
     }
 }
 
@@ -238,7 +190,7 @@ class create {
         util.toggleDiv('joukkueButton');
         util.toggleDiv('editButton');
         util.toggleDiv('cancelButton');
-        this.editMode = this.editMode == true ? false : true;
+        this.editMode = this.editMode != true;
     }
 
     static element(tagName: string, inner?: any, id?: string): any {
@@ -300,19 +252,14 @@ class create {
     static formRow(appendable, inputLabel, required?, before?, beforeElement?, validate?) {
         let row = this.element('p');
         row.appendChild(this.input(inputLabel, required, validate));
-        if (before) {
-            appendable.insertBefore(row, beforeElement);
-        } else {
-            appendable.appendChild(row);
-        }
+        if (before) appendable.insertBefore(row, beforeElement);
+        else appendable.appendChild(row);
     }
 
     static formButton(appendable, id, inputLabel, disableSubmit?) {
         let row = this.element('p');
         let button = this.element('button', inputLabel);
-        if (!disableSubmit) {
-            button.type = 'submit';
-        }
+        if (!disableSubmit) button.type = 'submit';
         button.name = id;
         button.id = id;
         row.appendChild(button);
@@ -344,7 +291,7 @@ class create {
         let tulosCaption: HTMLTableCaptionElement = document.createElement('caption');
         let firstRow: HTMLTableRowElement = document.createElement('tr');
         let sarjaHeader: HTMLTableHeaderCellElement = this.element('th', 'Sarja');
-        //sarjaHeader.addEventListener('onclick', util.sortTable(0), false);
+        sarjaHeader.addEventListener('onclick', util.sortTable(arr,'sarja'), false);
         firstRow.appendChild(sarjaHeader);
         firstRow.appendChild(this.element('th', 'Joukkue'));
         firstRow.appendChild(this.element('th', 'Pisteet'));
@@ -387,7 +334,7 @@ class create {
 }
 
 class util {
-    static rastit = util.getRastit();
+    static rastit: any = util.getRastit();
 
     static sortTable(arr,property) {
         arr.sort(function(a, b) {
