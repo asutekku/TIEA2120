@@ -1,6 +1,13 @@
 'use strict';
 
+/**
+ * Main class
+ */
 class TulosPalvelu {
+    /**
+     * The main function
+     * I like to have this to not accidentally executing something unwanted
+     */
     public static main(): void {
         create.table(util.getJoukkueet(data));
         create.form('rasti', 'Rastin tiedot');
@@ -10,6 +17,9 @@ class TulosPalvelu {
     }
 }
 
+/**
+ * Class for the team
+ */
 class Joukkue {
     public sarja: string;
     public id: number;
@@ -28,6 +38,9 @@ class Joukkue {
     }
 }
 
+/**
+ * Rasti class
+ */
 class Rasti {
     public kilpailu: number;
     public lon: string;
@@ -44,9 +57,16 @@ class Rasti {
     }
 }
 
+/**
+ * Class to handle the controlling functions
+ */
 class Controller {
     static teamIndex: number;
 
+    /**
+     * Creates a new rasti and saves it to rastis
+     * @param e - Event to prevent button doing something evil
+     */
     static newRasti(e) {
         if (e.preventDefault) e.preventDefault();
         let form: HTMLFormElement = util.getByID('form_lisaaRasti');
@@ -65,6 +85,10 @@ class Controller {
         }
     }
 
+    /**
+     * Saves the team to data
+     * @param e - Event to prevent button doing something evil
+     */
     static saveJoukkue(e) {
         if (e.preventDefault) e.preventDefault();
         let form: HTMLFormElement = util.getByID('form_lisaaJoukkue');
@@ -102,6 +126,10 @@ class Controller {
         }
     }
 
+    /**
+     * Should validate the team form
+     * @returns {boolean} - Is the form valid
+     */
     static validateJoukkueForm() {
         let a = document.forms['form_lisaaJoukkue']['input_1_0'].value;
         let b = document.forms['form_lisaaJoukkue']['input_1_1'].value;
@@ -114,10 +142,19 @@ class Controller {
         util.getByID('joukkueButton').disabled = false;
     }
 
+    /**
+     * Checks whether the form is empty
+     * @param form - Form to check
+     * @returns {boolean} - True if empty, false if not
+     */
     static formEmpty(form): boolean {
         return util.mapForm(form).map(x => x.value !== '').length <= 0;
     }
 
+    /**
+     * Set validations for input fields
+     * @param object - Object to set the validation to
+     */
     static setValidations(object) {
         object.onfocusout = function() {
             Controller.validateJoukkueForm();
@@ -127,6 +164,11 @@ class Controller {
         };
     }
 
+    /**
+     * Updates team data
+     * @param team - Team to update
+     * @param form - Resets the form where the data is coming from
+     */
     static updateJoukkueet(team, form): void {
         util.getJoukkueet(data)[Controller.teamIndex] = team;
         form.reset();
@@ -135,6 +177,10 @@ class Controller {
         create.toggleEditButtons();
     }
 
+    /**
+     * Edits a team
+     * @param jj - Name of the team
+     */
     static editJoukkue(jj) {
         if (!create.editMode) {
             create.toggleEditButtons();
@@ -166,9 +212,12 @@ class create {
     static emptyForm = true;
     static legendText = 'Uusi joukkue';
 
+    /**
+     * Creates the form buttons
+     */
     static createEditButtons() {
-        create.formButton(util.getByTag('fieldset')[1], 'editButton', 'Tallenna', false);
-        create.formButton(util.getByTag('fieldset')[1], 'cancelButton', 'Peruuta', true);
+        create.submitFormButton(util.getByTag('fieldset')[1], 'editButton', 'Tallenna', false);
+        create.submitFormButton(util.getByTag('fieldset')[1], 'cancelButton', 'Peruuta', true);
         util.getByID('cancelButton').onclick = function() {
             let form: HTMLFormElement = util.getByID('form_lisaaJoukkue');
             document.getElementsByTagName('legend')[1].textContent = 'Uusi joukkue';
@@ -177,12 +226,18 @@ class create {
         };
     }
 
+    /**
+     * Set the visibility of form buttons
+     */
     static setEditButtons() {
         util.getByID('joukkueButton').style.display = 'block';
         util.getByID('editButton').style.display = 'none';
         util.getByID('cancelButton').style.display = 'none';
     }
 
+    /**
+     * Toggles the state of edit buttons
+     */
     static toggleEditButtons() {
         let legend = document.getElementsByTagName('legend')[1];
         this.legendText = legend.textContent === this.legendText ? 'Muokkaa joukkuetta' : 'Uusi joukkue';
@@ -193,13 +248,25 @@ class create {
         this.editMode = this.editMode != true;
     }
 
+    /**
+     * Alternative way to create new element instead of document.createElement
+     * @param {string} - tagName Tag of the element
+     * @param inner - TextContent of the element
+     * @param {string} - id ID of the element
+     * @returns {HTMLElement} - Returns the element
+     */
     static element(tagName: string, inner?: any, id?: string): any {
-        let el: any = document.createElement(tagName);
+        let el: HTMLElement = document.createElement(tagName);
         if (inner !== undefined) el.textContent = inner;
         if (id !== undefined) el.id = id;
         return el;
     }
 
+    /**
+     * Form constructor
+     * @param {string} type - Type of the form (In this case either rasti or joukkue)
+     * @param {string} title - Name of of the legend of the form
+     */
     static form(type: string, title: string) {
         let form = document.getElementsByTagName('form')[type === 'rasti' ? 0 : 1];
         let fieldSet: HTMLElement = this.element('fieldSet');
@@ -218,7 +285,7 @@ class create {
             this.formRow(fieldSet, 'Lat', true);
             this.formRow(fieldSet, 'Lon', true);
             this.formRow(fieldSet, 'Koodi', true);
-            this.formButton(fieldSet, 'rasti', 'Lisää rasti');
+            this.submitFormButton(fieldSet, 'rasti', 'Lisää rasti');
         } else if (type === 'joukkue') {
             this.inputID = 0;
             form.removeAttribute('action');
@@ -234,30 +301,47 @@ class create {
             let legendJasenet: HTMLElement = this.element('legend', 'Jäsenet');
             fieldSet.appendChild(fieldSetJasenet);
             fieldSetJasenet.appendChild(legendJasenet);
-            this.formRow(fieldSetJasenet, 'Jasen 1', true, false, false, true);
-            this.formRow(fieldSetJasenet, 'Jasen 2', true, false, false, true);
-            let buttonRow = this.formButton(fieldSetJasenet, 'jasenButton', 'Lisää jäsen', true);
+            this.formRow(fieldSetJasenet, 'Jäsen 1', true, false, false, true);
+            this.formRow(fieldSetJasenet, 'Jäsen 2', false, false, false, true);
+            let buttonRow = this.submitFormButton(fieldSetJasenet, 'jasenButton', 'Lisää jäsen', true);
             let jasenMaara = 2;
             util.getByID('jasenButton').onclick = function() {
                 jasenMaara++;
                 create.formRow(fieldSetJasenet, 'Jasen ' + jasenMaara, false, true, buttonRow);
             };
-            let joukkueButton = this.formButton(fieldSet, 'joukkueButton', 'Lisää joukkue');
+            let joukkueButton = this.submitFormButton(fieldSet, 'joukkueButton', 'Lisää joukkue');
             util.getByID('joukkueButton').disabled = true;
         } else {
             return;
         }
     }
 
-    static formRow(appendable, inputLabel, required?, before?, beforeElement?, validate?) {
+    /**
+     * Creates an row with input to a form
+     * @param appendable - The top level element, most likely fieldSet
+     * @param inputLabel - Label for the input
+     * @param required - Is the input required
+     * @param {boolean} before - Is the row inserted before some element
+     * @param beforeElement - Which element the row is inserted before
+     * @param {boolean} validate - Does the function validate when exited
+     */
+    static formRow(appendable, inputLabel: string, required?, before?: boolean, beforeElement?, validate?) {
         let row = this.element('p');
         row.appendChild(this.input(inputLabel, required, validate));
         if (before) appendable.insertBefore(row, beforeElement);
         else appendable.appendChild(row);
     }
 
-    static formButton(appendable, id, inputLabel, disableSubmit?) {
-        let row = this.element('p');
+    /**
+     * Creates a submit button to be used in a form
+     * @param appendable - The top level element, most likely fieldSet
+     * @param id - ID of the Button
+     * @param inputLabel - Label for the button
+     * @param disableSubmit - Whether button is disabled from the start
+     * @returns {HTMLParagraphElement} - Returns the button inside p-element
+     */
+    static submitFormButton(appendable, id, inputLabel, disableSubmit?) {
+        let row: HTMLParagraphElement = this.element('p');
         let button = this.element('button', inputLabel);
         if (!disableSubmit) button.type = 'submit';
         button.name = id;
@@ -267,8 +351,16 @@ class create {
         return row;
     }
 
+    /**
+     * Creates an input field to be used in a form
+     * @param inputLabel - The label for hte field
+     * @param required - Is the input required
+     * @param validate - Does it validate the form
+     * @returns {HTMLParagraphElement} - Returns the input inside a p
+     */
     static input(inputLabel, required?, validate?) {
-        let label = this.element('label', inputLabel + ': ');
+        let p: HTMLParagraphElement = this.element('p');
+        let label: HTMLLabelElement = this.element('label', inputLabel + ': ');
         let input = this.element('input');
         let inputID = 'input_' + this.formID + '_' + this.inputID;
         if (required) input.required = 'required';
@@ -281,17 +373,23 @@ class create {
         input.class = 'formInput';
         this.inputID++;
         label.appendChild(input);
-        return label;
+        p.appendChild(label);
+        return p;
     }
 
+    /**
+     * Creates tables to be used in the tulospalvelu
+     * These are not modular and will not be
+     * @param arr - The array to create the table from
+     */
     static table(arr) {
         let joukkueet: any = arr;
-        util.sortTable(joukkueet,'sarja');
+        util.sortTable(joukkueet, 'sarja');
         let tulosTable: HTMLTableElement = create.element('table', '', 'tulosTable');
         let tulosCaption: HTMLTableCaptionElement = document.createElement('caption');
         let firstRow: HTMLTableRowElement = document.createElement('tr');
         let sarjaHeader: HTMLTableHeaderCellElement = this.element('th', 'Sarja');
-        sarjaHeader.addEventListener('onclick', util.sortTable(arr,'sarja'), false);
+        sarjaHeader.addEventListener('onclick', util.sortTable(arr, 'sarja'), false);
         firstRow.appendChild(sarjaHeader);
         firstRow.appendChild(this.element('th', 'Joukkue'));
         firstRow.appendChild(this.element('th', 'Pisteet'));
@@ -309,6 +407,11 @@ class create {
         }
     }
 
+    /**
+     * The row to be inserted into the array
+     * @param team - Team element to insert into the row
+     * @returns {HTMLTableRowElement} - Row element
+     */
     static teamRow(team) {
         let jasenString: string = team.jasenet != null ? team.jasenet.join(', ') : '';
         let row = document.createElement('tr');
@@ -334,9 +437,17 @@ class create {
 }
 
 class util {
+    /**
+     * Array to be used in the functions in this class
+     */
     static rastit: any = util.getRastit();
 
-    static sortTable(arr,property) {
+    /**
+     * Sorts the array
+     * @param arr - Array to be sorted
+     * @param property - Value to sort from
+     */
+    static sortTable(arr, property) {
         arr.sort(function(a, b) {
             let itemA = a[property].toUpperCase(); // ignore upper and lowercase
             let itemB = b[property].toUpperCase(); // ignore upper and lowercase
@@ -346,8 +457,13 @@ class util {
         });
     }
 
+    /**
+     * Returns the joukkueet in a nice array
+     * @param data-  The json object
+     * @returns {Joukkue[]} - Returns the joukkeet as Joukkue array
+     */
     static getJoukkueet(data) {
-        let arr = [];
+        let arr:Joukkue[] = [];
         for (let i = 0; i < data.sarjat.length; i++) {
             for (let j = 0; j < data.sarjat[i].joukkueet.length; j++) {
                 let joukkue = new Joukkue(
@@ -365,6 +481,11 @@ class util {
         return arr;
     }
 
+    /**
+     * Returns the points of the team
+     * @param team - Team to get the numbers
+     * @returns {number} - Team points
+     */
     static getPoints(team) {
         const kaydytRastit = util.getUnique(util.getKaydytRastitID(team).sort());
         let pisterastit = util.getKoodit(util.arrayElementsToString(kaydytRastit)).sort();
@@ -372,22 +493,46 @@ class util {
         return pisteet !== undefined ? pisteet : 0;
     }
 
+    /**
+     * Gets all of the rastit in an array
+     * @returns {any} - Array of rastit
+     */
     static getRastit() {
         return data.rastit.map(x => x);
     }
 
+    /**
+     * Tool to get random integer with defined length
+     * @param length - Length of the integer
+     * @returns {number} - Random integer
+     */
     static randomInt(length): number {
-        return Math.floor(Math.pow(10, length - 1) + Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1));
+        return Math.floor(Math.pow(10,length - 1) + Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1));
     }
 
+    /**
+     * Returns the ids of visited Rastit
+     * @param team - Team to process
+     * @returns {any} - Rasti ID array
+     */
     static getKaydytRastitID(team) {
         return data.tupa.filter(p => p.joukkue === team.id).map(x => x.rasti);
     }
 
+    /**
+     * Returns the visisted rastit
+     * @param team - Team to process
+     * @returns {any} - Rasti array
+     */
     static getKaydytRastit(team) {
         return data.tupa.filter(p => p.joukkue === team.id);
     }
 
+    /**
+     * Return the codes for Rasti
+     * @param rastiArr - Array of rastit
+     * @returns {any} - Codes for rastit
+     */
     static getKoodit(rastiArr) {
         return this.getRastit()
             .filter(function(e) {
@@ -396,22 +541,49 @@ class util {
             .map(x => x.koodi);
     }
 
+    /**
+     * Return filtered array with only unique values
+     * @param arr - Array to process
+     * @returns {any} - Filtered array
+     */
     static getUnique(arr) {
         return arr.filter(this.returnUniqueValues);
     }
 
+    /**
+     * Return unique values
+     * @param value - Array
+     * @param index - Index of the value
+     * @param self -
+     * @returns {boolean} - Is the value unique
+     */
     static returnUniqueValues(value, index, self) {
         return self.indexOf(value) === index;
     }
 
+    /**
+     * Converts array's elements to a string
+     * @param arr - Array to process
+     * @returns {any} - Mapped array
+     */
     static arrayElementsToString(arr) {
         return arr.map(x => x.toString());
     }
 
+    /**
+     * Returns the first character in a string of every element of array
+     * @param arr - Array to process
+     * @returns {any} - Array of first characters
+     */
     static getFirstNumber(arr) {
         return arr.map(x => parseInt(x.toString()[0]));
     }
 
+    /**
+     * parses array elements to integer
+     * @param arr - Array to process
+     * @returns {any} - Array with only int elements
+     */
     static parseArrayToInt(arr) {
         return arr
             .filter(function(x) {
@@ -420,6 +592,11 @@ class util {
             .map(x => parseInt(x));
     }
 
+    /**
+     * Returns the time used by a team
+     * @param team - The team handled
+     * @returns {string} - Time for the team
+     */
     static getAika(team) {
         let aikaString = '00:00:00';
         const kaydytRastit = this.getKaydytRastit(team).filter(function(rasti) {
@@ -441,10 +618,20 @@ class util {
         return aikaString;
     }
 
-    static getMatchingRasti(rastiID) {
+    /**
+     * Return an array of rastis whose if match with rastiID
+     * @param rastiID - Id to check
+     * @returns {any} - returns all matching rastit
+     */
+    static getMatchingRasti(rastiID:string) {
         return util.rastit.filter(rasti => rasti.id == rastiID)[0];
     }
 
+    /**
+     * Return the distance traveled by a team
+     * @param team - Team to process
+     * @returns {number} - Distance traveled
+     */
     static getMatka(team) {
         let matka = 0;
         const kaydytRastit = util.getKaydytRastit(team).filter(function(rasti) {
@@ -460,6 +647,14 @@ class util {
         return Math.floor(matka);
     }
 
+    /**
+     * Return distance between two points
+     * @param lat1 - Latitude, point 1
+     * @param lon1 - Longitude, point 1
+     * @param lat2 - Latitude, point 2
+     * @param lon2 - Longitude, point 2
+     * @returns {number} - The distance traveled
+     */
     static getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
         let R = 6371; // Radius of the earth in km
         let dLat = util.deg2rad(lat2 - lat1); // deg2rad below
@@ -470,27 +665,55 @@ class util {
         return d;
     }
 
+    /**
+     * converts degrees to radian
+     * @param deg - Degree to convert
+     * @returns {number} - Radians from degredd
+     */
     static deg2rad(deg) {
         return deg * (Math.PI / 180);
     }
 
+    /**
+     * Returns document by id (Just to shorten the getElementById
+     * @param id - ID to get
+     * @returns {HTMLElement | null} - Returned element
+     */
     static getByID(id) {
         return document.getElementById(id);
     }
 
+    /**
+     * Returns document by id (Just to shorten the getElementsByTagName
+     * @param tag - Tag to search
+     * @returns {NodeListOf<HTMLElementTagNameMap[keyof HTMLElementTagNameMap]>} - Elements with tag
+     */
     static getByTag(tag) {
         return document.getElementsByTagName(tag);
     }
 
+    /**
+     * Return input values from an array
+     * @param form - The form to check
+     * @returns {any[]} - Form values
+     */
     static mapForm(form) {
         return Array.from(form.getElementsByTagName('input'));
     }
 
+    /**
+     * Toggles HTMLDOM element visibility
+     * @param id - Id to toggle
+     */
     static toggleDiv(id) {
         let div = util.getByID(id);
         div.style.display = div.style.display == 'none' ? 'block' : 'none';
     }
 
+    /**
+     * Removes the element
+     * @param elemID - ID of element to remove
+     */
     static removeEl(elemID) {
         let elem = util.getByID(elemID);
         if (elem.parentNode) {
@@ -499,6 +722,9 @@ class util {
     }
 }
 
+/**
+ * Runs when everything has loaded
+ */
 window.onload = function() {
     TulosPalvelu.main();
 };
