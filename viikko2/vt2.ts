@@ -1,6 +1,6 @@
 "use strict";
 
-let printDebug = false;
+const printDebug = true;
 
 /**
  * Main class
@@ -63,16 +63,14 @@ class Rasti {
  * Class to handle the controlling functions
  */
 class Controller {
-    static get formAmount(): number {
-        return this._formAmount;
+    static teamIndex: number;
+    static jasenInputCount(): number {
+        return document.getElementById("jasenet_fieldset").getElementsByTagName("input").length;
     }
 
-    static set formAmount(value: number) {
-        this._formAmount = value;
+    static jasenInputValues(): NodeListOf<HTMLInputElement> {
+        return document.getElementById("jasenet_fieldset").getElementsByTagName("input");
     }
-    private static _formAmount: number = 2;
-    static teamIndex: number;
-    public formAmount: number = 2;
 
     /**
      * Creates a new rasti and saves it to rastis
@@ -109,12 +107,10 @@ class Controller {
             let team: Joukkue = util.getJoukkueet(data)[Controller.teamIndex];
             team.nimi = util.getByID("input_1_0").value;
             team.jasenet = [];
-            for (let jasenInput of document.getElementsByTagName("legend")[1].children) {
+            for (let jasenInput of document.getElementById("jasenet_fieldset").children) {
                 team.jasenet.push(jasenInput.value);
             }
             Controller.updateJoukkueet(team, form);
-            util.debug(printDebug);
-            this.formAmount = 2;
             form.reset();
         } else {
             let joukkue: Joukkue = new Joukkue(util.getByID("input_1_0").value, "00:00:00", [], util.randomInt(16), "2h", 0);
@@ -122,7 +118,6 @@ class Controller {
                 if (key.startsWith("jäsen")) {
                     joukkue.jasenet.push(value);
                 } else {
-                    if (printDebug) console.log(key);
                     joukkue[key] = value;
                 }
             });
@@ -130,35 +125,26 @@ class Controller {
             joukkue.aika = "00:00:00";
             joukkue.matka = 0;
             joukkue.sarja = "2h";
-            if (printDebug) console.log(joukkue);
             if (!Controller.formEmpty(form)) {
                 data.sarjat[1].joukkueet.push(joukkue);
                 let joukkueet = util.getJoukkueet(data);
                 let newRow = create.teamRow(joukkueet[joukkueet.length - 1]);
                 util.getByID("tulosTable").appendChild(create.teamRow(joukkue));
-                if (Controller.formAmount > 2) {
-                    for (let i = 2; i < Controller.formAmount; i++) util.removeEl("p_input_1_" + (i + 1));
-                }
-                this.formAmount = 2;
+                if (Controller.jasenInputCount() > 2) for (let i = 3; i <= Controller.jasenInputCount(); i++) util.removeEl("p_input_1_" + i);
                 form.reset();
             }
         }
     }
 
     /**
-     * Should validate the team form
+     * Checks whether the form is empty or not
      * @returns {boolean} - Is the form valid
      */
-    static validateJoukkueForm() {
-        let a = document.forms["form_lisaaJoukkue"]["input_1_0"].value;
-        let b = document.forms["form_lisaaJoukkue"]["input_1_1"].value;
-        let c = document.forms["form_lisaaJoukkue"]["input_1_2"].value;
-        if ((a == null || a == "", b == null || b == "", c == null || c == "")) {
-            create.emptyForm = false;
-            util.getByID("joukkueButton").disabled = true;
-            return false;
-        }
-        util.getByID("joukkueButton").disabled = false;
+    static validateForm(formID,buttonID) {
+        let inputs:NodeListOf<HTMLInputElement> = document.getElementById(formID).getElementsByTagName('input');
+        let disableButtons = false;
+        for (let input of inputs) if (input.value == null || input.value == '') disableButtons = true;
+        util.getByID(buttonID).disabled = disableButtons;
     }
 
     /**
@@ -176,10 +162,10 @@ class Controller {
      */
     static setValidations(object) {
         object.onfocusout = function() {
-            Controller.validateJoukkueForm();
+            Controller.validateForm('form_lisaaJoukkue','joukkueButton');
         };
         object.oninput = function() {
-            Controller.validateJoukkueForm();
+            Controller.validateForm('form_lisaaJoukkue','joukkueButton');
         };
     }
 
@@ -201,8 +187,6 @@ class Controller {
      * @param jj - Name of the team
      */
     static editJoukkue(jj) {
-        if (printDebug) console.log("----------------- EDIT START");
-        util.debug();
         if (!create.editModeON) {
             create.toggleEditButtons();
             let joukkueet = util.getJoukkueet(data);
@@ -218,16 +202,13 @@ class Controller {
             for (let i = 0; i < team.jasenet.length; i++) {
                 let id = i + 1;
                 if (i > 1) {
-                    if (printDebug) console.log(`DEBUG: input_1_${id}`);
                     create.formRow(util.getByID("jasenet_fieldset"), `Jäsen ${i + 1}`, false, true, util.getByID("p_jasenButton"), true, i.toString());
                     util.getByID(`input_1_${id}`).value = team.jasenet[i].toString();
-                    this.formAmount = FormId;
                     FormId++;
                 } else {
                     util.getByID(`input_1_${id}`).value = team.jasenet[i].toString();
                 }
             }
-            if (printDebug) console.log("----------------- EDIT END");
         } else {
             window.alert("Please finish editing before selecting a new team");
         }
@@ -240,9 +221,7 @@ class create {
     }
 
     static set input_ID(value: number) {
-        if (printDebug) console.log(`DEBUG iid BEF: ${this._input_ID}`);
         this._input_ID = value;
-        if (printDebug) console.log(`DEBUG iid AFT: ${this._input_ID}`);
     }
     private static _input_ID = 0;
     static formID = 0;
@@ -257,20 +236,16 @@ class create {
         create.submitFormButton(util.getByTag("fieldset")[1], "editButton", "Tallenna", false);
         create.submitFormButton(util.getByTag("fieldset")[1], "cancelButton", "Peruuta", true);
         util.getByID("cancelButton").onclick = function() {
-            util.debug(printDebug);
-            if (Controller.formAmount > 2) {
-                for (let i = 3; i <= Controller.formAmount; i++) {
-                    if (printDebug) console.log(`p_input_1_${i}`);
+            if (Controller.jasenInputCount() > 2) {
+                for (let i = 3; i <= Controller.jasenInputCount(); i++) {
                     util.removeEl(`p_input_1_${i}`);
                 }
             }
             let form: HTMLFormElement = util.getByID("form_lisaaJoukkue");
             document.getElementsByTagName("legend")[1].textContent = "Uusi joukkue";
             form.reset();
-            Controller.formAmount = 2;
             create.input_ID = 3;
             create.toggleEditButtons();
-            util.debug(printDebug);
         };
     }
 
@@ -354,9 +329,8 @@ class create {
             let buttonRow = this.submitFormButton(fieldSetJasenet, "jasenButton", "Lisää jäsen", true);
             let jasenMaara = 2;
             util.getByID("jasenButton").onclick = function() {
-                Controller.formAmount++;
                 jasenMaara++;
-                create.formRow(fieldSetJasenet, "Jasen " + Controller.formAmount, false, true, buttonRow);
+                create.formRow(fieldSetJasenet, "Jasen " + Controller.jasenInputCount() + 1, false, true, buttonRow);
             };
             let joukkueButton = this.submitFormButton(fieldSet, "joukkueButton", "Lisää joukkue");
             util.getByID("joukkueButton").disabled = true;
@@ -443,10 +417,10 @@ class create {
         sarjaHeader.addEventListener("click", (e: Event) => util.sortTable(tulosTable, 0));
         firstRow.appendChild(sarjaHeader);
         let joukkueHeader = this.element("th", "Joukkue");
-        joukkueHeader.addEventListener("click", (e: Event) => util.sortTable(tulosTable, 1));
+        joukkueHeader.addEventListener("click", (e: Event) => util.sortWithSeries(tulosTable, 1));
         firstRow.appendChild(joukkueHeader);
         let pisteHeader = this.element("th", "Pisteet");
-        pisteHeader.addEventListener("click", (e: Event) => util.sortTable(tulosTable, 2));
+        pisteHeader.addEventListener("click", (e: Event) => util.sortWithSeries(tulosTable, 2));
         firstRow.appendChild(pisteHeader);
         let aikaHeader = this.element("th", "Aika");
         aikaHeader.addEventListener("click", (e: Event) => util.sortTable(tulosTable, 3));
@@ -515,24 +489,27 @@ class util {
         });
     }
 
+    static sortWithSeries(table, col) {
+        this.sortTable(table, col);
+        this.sortTable(table, 0);
+    }
+
     /**
-     * Table sorting function taken form w3c and edited a bit
+     * Table sorting function
+     * Originally taken from w3c but edited to fit my needs
      * @param ediTable - Table to edit
      * @param col - Column to sort by
      */
     static sortTable(ediTable, col) {
-        let table,
-            rows,
-            switching,
+        let rows,
             i,
             x,
             y,
             shouldSwitch,
-            dir,
-            switchcount = 0;
-        table = ediTable;
-        switching = true;
-        dir = "asc";
+            switchCount = 0;
+        let table = ediTable;
+        let switching = true;
+        let dir = "asc";
         while (switching) {
             switching = false;
             rows = table.getElementsByTagName("tr");
@@ -569,9 +546,9 @@ class util {
             if (shouldSwitch) {
                 rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                 switching = true;
-                switchcount++;
+                switchCount++;
             } else {
-                if (switchcount == 0 && dir == "asc") {
+                if (switchCount == 0 && dir == "asc") {
                     dir = "desc";
                     switching = true;
                 }
@@ -864,12 +841,12 @@ class util {
             elem.parentNode.removeChild(elem);
         }
     }
+}
 
-    static debug(print) {
-        if (print){
-        console.log(`inputID: ${create.input_ID}`);
-        console.log(`formAmount: ${Controller.formAmount}`);
-        }
+class LOGGER{
+    static time:string = new Date().toLocaleString();
+    static debug(message){
+        if (printDebug) console.log(`${this.time} ${message}`)
     }
 }
 
