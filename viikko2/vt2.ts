@@ -24,7 +24,7 @@ class TulosPalvelu {
         document.body.appendChild(rasti_container);
         document.body.appendChild(joukkue_container);
         create.table(util.getJoukkueet(data));
-        create.form("rasti", "Rastin tiedot");
+        create.form("rasti", "Uusi rasti");
         create.form("joukkue", "Uusi joukkue");
         create.createEditButtons();
         create.setEditButtons();
@@ -332,10 +332,10 @@ class create {
             }
             form.removeAttribute("action");
             form.id = "form_lisaaRasti";
-            this.formRow(fieldSet, "Latitude", true);
-            this.formRow(fieldSet, "Longitude", true);
-            this.formRow(fieldSet, "Koodi", true);
-            this.submitFormButton(fieldSet, "rasti", "Lisää rasti");
+            this.formRow(fieldSet, "Latitude", true,false,'',false,'','Rastin pituusaste');
+            this.formRow(fieldSet, "Longitude", true,false,'',false,'','Rastin leveysaste');
+            this.formRow(fieldSet, "Koodi", true,false,'',false,'','Rastin koodi');
+            this.submitFormButton(fieldSet, "rasti", "Rasti");
         } else if (type === "joukkue") {
             form.removeAttribute("action");
             form.id = "form_lisaaJoukkue";
