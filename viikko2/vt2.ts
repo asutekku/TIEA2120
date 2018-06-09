@@ -1,6 +1,6 @@
 "use strict";
 
-const printDebug = false;
+const printDebug = true;
 
 /**
  * Main class
@@ -11,11 +11,37 @@ class TulosPalvelu {
      * I like to have this to not accidentally executing something unwanted
      */
     public static main(): void {
+        let header = document.createElement('div');
+        header.setAttribute('id','header');
+        let container = document.createElement('div');
+        container.setAttribute('id','container');
+        let form_container = document.createElement('div');
+        form_container.setAttribute('id','form_container');
+        let rasti_container = document.createElement('div');
+        rasti_container.setAttribute('id','rasti_container');
+        let joukkue_container = document.createElement('div');
+        joukkue_container.setAttribute('id','joukkue_container');
+        document.body.appendChild(rasti_container);
+        document.body.appendChild(joukkue_container);
         create.table(util.getJoukkueet(data));
         create.form("rasti", "Rastin tiedot");
         create.form("joukkue", "Uusi joukkue");
         create.createEditButtons();
         create.setEditButtons();
+        util.wrap(document.body.getElementsByTagName('h1')[0],header);
+        util.wrap(document.body.getElementsByTagName('h2')[0],rasti_container);
+        util.wrap(util.getByID('form_lisaaRasti'),rasti_container);
+        util.wrap(util.getByID('joukkue'),joukkue_container);
+        util.wrap(util.getByID('form_lisaaJoukkue'),joukkue_container);
+        util.wrap( util.getByID('tupa'),container);
+        util.wrap(rasti_container,form_container);
+        util.wrap(joukkue_container,form_container);
+        util.wrap(form_container,container);
+        var link = document.createElement('link');
+        link.setAttribute('rel', 'stylesheet');
+        link.setAttribute('type', 'text/css');
+        link.setAttribute('href', 'https://fonts.googleapis.com/css?family=Roboto');
+        document.head.appendChild(link);
     }
 }
 
@@ -82,10 +108,11 @@ class Controller {
 
     static removeExtraJasenInputs(): void {
         let rows = Controller.jasenRows();
-t        if (rows.length > 2) for (let i = (rows.length - 1); i >= 2; i--) {
-            LOGGER.debug(`Removing node: ${rows[i]}`);
-            util.removeElementByNode(rows[i]);
-        }
+        if (rows.length > 2)
+            for (let i = rows.length - 1; i >= 2; i--) {
+                LOGGER.debug(`Removing node: ${rows[i]}`);
+                util.removeElementByNode(rows[i]);
+            }
     }
 
     /**
@@ -108,6 +135,7 @@ t        if (rows.length > 2) for (let i = (rows.length - 1); i >= 2; i--) {
             data.rastit.push(rasti);
             form.reset();
         }
+        console.log(data.rastit);
     }
 
     /**
@@ -125,6 +153,7 @@ t        if (rows.length > 2) for (let i = (rows.length - 1); i >= 2; i--) {
             team.nimi = util.getByID("input_1_0").value;
             team.jasenet = [];
             for (let input of document.getElementById("jasenet_fieldset").getElementsByTagName("input")) {
+                LOGGER.debug("Adding a new member");
                 team.jasenet.push(input.value);
             }
             create.toggleEditButtons();
@@ -303,15 +332,15 @@ class create {
             }
             form.removeAttribute("action");
             form.id = "form_lisaaRasti";
-            this.formRow(fieldSet, "Lat", true);
-            this.formRow(fieldSet, "Lon", true);
+            this.formRow(fieldSet, "Latitude", true);
+            this.formRow(fieldSet, "Longitude", true);
             this.formRow(fieldSet, "Koodi", true);
             this.submitFormButton(fieldSet, "rasti", "Lisää rasti");
         } else if (type === "joukkue") {
             form.removeAttribute("action");
             form.id = "form_lisaaJoukkue";
             this.formID = 1;
-            this.formRow(fieldSet, "Nimi", true, false, false, true);
+            this.formRow(fieldSet, "Nimi", true, false, false, true,'',"Joukkueen nimi");
             let fieldSetJasenet: HTMLElement = this.element("fieldSet", "", "jasenet_fieldset");
             let legendJasenet: HTMLElement = this.element("legend", "Jäsenet");
             fieldSet.appendChild(fieldSetJasenet);
@@ -330,10 +359,18 @@ class create {
 
     static addNewJasenRow(e) {
         e.preventDefault();
-        create.formRow(util.getByID("jasenet_fieldset"), `Jasen ${Controller.jasenInputCount() + 1}`, false, true, util.getByID("p_jasenButton"), true);
+        create.formRow(
+            util.getByID("jasenet_fieldset"),
+            `Jäsen ${Controller.jasenInputCount() + 1}`,
+            false,
+            true,
+            util.getByID("p_jasenButton"),
+            true,
+            (Controller.jasenInputCount() + 1).toString()
+        );
         util.getByID("cancelButton").style.display = "block";
     }
-    t;
+
     /**
      * Creates an row with input to a form
      * @param appendable - The top level element, most likely fieldSet
@@ -344,10 +381,10 @@ class create {
      * @param {boolean} validate - Does the function validate when exited
      * @param id
      */
-    static formRow(appendable, inputLabel: string, required?, before?: boolean, beforeElement?, validate?, id?: string) {
+    static formRow(appendable, inputLabel: string, required?, before?: boolean, beforeElement?, validate?, id?: string,addText?:string) {
         let row = this.element("p");
         row.setAttribute("class", "formRow");
-        row.appendChild(this.input(inputLabel, required, validate));
+        row.appendChild(this.input(inputLabel, required, validate,addText));
         if (before) appendable.insertBefore(row, beforeElement);
         else appendable.appendChild(row);
     }
@@ -377,20 +414,24 @@ class create {
      * @param inputLabel - The label for hte field
      * @param required - Is the input required
      * @param validate - Does it validate the form
+     * @param addText
      * @returns {HTMLParagraphElement} - Returns the input inside a p
      */
-    static input(inputLabel, required?, validate?) {
-        let label: HTMLLabelElement = this.element("label", inputLabel + ": ");
+    static input(inputLabel, required?, validate?, addText?) {
+        let label: HTMLLabelElement = this.element("label");
+        label.setAttribute('class','input');
         let input = this.element("input");
         let inputID = `input_${inputLabel}`;
         if (required) input.required = "required";
         if (validate) Controller.setValidations(input);
         input.type = "text";
+        input.placeholder = inputLabel;
         input.val = "";
         input.name = inputLabel.toLowerCase();
         label.htmlFor = inputID;
         input.class = "formInput";
         label.appendChild(input);
+        if (addText != undefined) label.appendChild(this.element('span',addText));
         return label;
     }
 
@@ -457,6 +498,12 @@ class create {
         row.appendChild(aika);
         row.appendChild(matka);
         return row;
+    }
+
+    static rastiLeimaukset(){
+        let nav = create.element('nav');
+        let ul = create.element('ul');
+        nav.appendChild(ul);
     }
 }
 
@@ -827,6 +874,12 @@ class util {
             LOGGER.debug(err);
         }
     }
+
+    static wrap(toWrap, wrapper?) {
+        wrapper = wrapper || document.createElement('div');
+        toWrap.parentNode.appendChild(wrapper);
+        return wrapper.appendChild(toWrap);
+    };
 
     /**
      * Removes the element
