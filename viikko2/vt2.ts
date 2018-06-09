@@ -1,5 +1,7 @@
 "use strict";
 
+let printDebug = false;
+
 /**
  * Main class
  */
@@ -111,7 +113,7 @@ class Controller {
                 team.jasenet.push(jasenInput.value);
             }
             Controller.updateJoukkueet(team, form);
-            util.debug();
+            util.debug(printDebug);
             this.formAmount = 2;
             form.reset();
         } else {
@@ -120,7 +122,7 @@ class Controller {
                 if (key.startsWith("jäsen")) {
                     joukkue.jasenet.push(value);
                 } else {
-                    console.log(key);
+                    if (printDebug) console.log(key);
                     joukkue[key] = value;
                 }
             });
@@ -128,7 +130,7 @@ class Controller {
             joukkue.aika = "00:00:00";
             joukkue.matka = 0;
             joukkue.sarja = "2h";
-            console.log(joukkue);
+            if (printDebug) console.log(joukkue);
             if (!Controller.formEmpty(form)) {
                 data.sarjat[1].joukkueet.push(joukkue);
                 let joukkueet = util.getJoukkueet(data);
@@ -199,7 +201,7 @@ class Controller {
      * @param jj - Name of the team
      */
     static editJoukkue(jj) {
-        console.log("----------------- EDIT START");
+        if (printDebug) console.log("----------------- EDIT START");
         util.debug();
         if (!create.editModeON) {
             create.toggleEditButtons();
@@ -216,7 +218,7 @@ class Controller {
             for (let i = 0; i < team.jasenet.length; i++) {
                 let id = i + 1;
                 if (i > 1) {
-                    console.log(`DEBUG: input_1_${id}`);
+                    if (printDebug) console.log(`DEBUG: input_1_${id}`);
                     create.formRow(util.getByID("jasenet_fieldset"), `Jäsen ${i + 1}`, false, true, util.getByID("p_jasenButton"), true, i.toString());
                     util.getByID(`input_1_${id}`).value = team.jasenet[i].toString();
                     this.formAmount = FormId;
@@ -225,7 +227,7 @@ class Controller {
                     util.getByID(`input_1_${id}`).value = team.jasenet[i].toString();
                 }
             }
-            console.log("----------------- EDIT END");
+            if (printDebug) console.log("----------------- EDIT END");
         } else {
             window.alert("Please finish editing before selecting a new team");
         }
@@ -238,9 +240,9 @@ class create {
     }
 
     static set input_ID(value: number) {
-        console.log(`DEBUG iid BEF: ${this._input_ID}`);
+        if (printDebug) console.log(`DEBUG iid BEF: ${this._input_ID}`);
         this._input_ID = value;
-        console.log(`DEBUG iid AFT: ${this._input_ID}`);
+        if (printDebug) console.log(`DEBUG iid AFT: ${this._input_ID}`);
     }
     private static _input_ID = 0;
     static formID = 0;
@@ -255,10 +257,10 @@ class create {
         create.submitFormButton(util.getByTag("fieldset")[1], "editButton", "Tallenna", false);
         create.submitFormButton(util.getByTag("fieldset")[1], "cancelButton", "Peruuta", true);
         util.getByID("cancelButton").onclick = function() {
-            util.debug();
+            util.debug(printDebug);
             if (Controller.formAmount > 2) {
                 for (let i = 3; i <= Controller.formAmount; i++) {
-                    console.log(`p_input_1_${i}`);
+                    if (printDebug) console.log(`p_input_1_${i}`);
                     util.removeEl(`p_input_1_${i}`);
                 }
             }
@@ -268,7 +270,7 @@ class create {
             Controller.formAmount = 2;
             create.input_ID = 3;
             create.toggleEditButtons();
-            util.debug();
+            util.debug(printDebug);
         };
     }
 
@@ -348,7 +350,7 @@ class create {
             fieldSet.appendChild(fieldSetJasenet);
             fieldSetJasenet.appendChild(legendJasenet);
             this.formRow(fieldSetJasenet, "Jäsen 1", true, false, false, true);
-            this.formRow(fieldSetJasenet, "Jäsen 2", false, false, false, true);
+            this.formRow(fieldSetJasenet, "Jäsen 2", true, false, false, true);
             let buttonRow = this.submitFormButton(fieldSetJasenet, "jasenButton", "Lisää jäsen", true);
             let jasenMaara = 2;
             util.getByID("jasenButton").onclick = function() {
@@ -863,9 +865,11 @@ class util {
         }
     }
 
-    static debug() {
+    static debug(print) {
+        if (print){
         console.log(`inputID: ${create.input_ID}`);
         console.log(`formAmount: ${Controller.formAmount}`);
+        }
     }
 }
 
