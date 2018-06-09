@@ -1,6 +1,6 @@
 "use strict";
 
-const printDebug = true;
+const printDebug = false;
 
 /**
  * Main class
@@ -68,8 +68,24 @@ class Controller {
         return document.getElementById("jasenet_fieldset").getElementsByTagName("input").length;
     }
 
-    static jasenInputValues(): NodeListOf<HTMLInputElement> {
+    static jasenInputValues() {
         return document.getElementById("jasenet_fieldset").getElementsByTagName("input");
+    }
+
+    static joukkueFormInputs() {
+        return document.getElementById("form_lisaaJoukkue").getElementsByTagName("input");
+    }
+
+    static jasenRows() {
+        return document.getElementById("jasenet_fieldset").getElementsByClassName("formRow");
+    }
+
+    static removeExtraJasenInputs(): void {
+        let rows = Controller.jasenRows();
+t        if (rows.length > 2) for (let i = (rows.length - 1); i >= 2; i--) {
+            LOGGER.debug(`Removing node: ${rows[i]}`);
+            util.removeElementByNode(rows[i]);
+        }
     }
 
     /**
@@ -99,21 +115,23 @@ class Controller {
      * @param e - Event to prevent button doing something evil
      */
     static saveJoukkue(e) {
-        if (e.preventDefault) e.preventDefault();
+        e.preventDefault();
         let form: HTMLFormElement = util.getByID("form_lisaaJoukkue");
         let formData = new FormData(form);
         let skip: boolean = false;
+        let values = Controller.joukkueFormInputs();
         if (create.editModeON) {
             let team: Joukkue = util.getJoukkueet(data)[Controller.teamIndex];
             team.nimi = util.getByID("input_1_0").value;
             team.jasenet = [];
-            for (let jasenInput of document.getElementById("jasenet_fieldset").children) {
-                team.jasenet.push(jasenInput.value);
+            for (let input of document.getElementById("jasenet_fieldset").getElementsByTagName("input")) {
+                team.jasenet.push(input.value);
             }
+            create.toggleEditButtons();
             Controller.updateJoukkueet(team, form);
             form.reset();
         } else {
-            let joukkue: Joukkue = new Joukkue(util.getByID("input_1_0").value, "00:00:00", [], util.randomInt(16), "2h", 0);
+            let joukkue: Joukkue = new Joukkue(values[0].value, "00:00:00", [], util.randomInt(16), "2h", 0);
             formData.forEach(function(value, key) {
                 if (key.startsWith("jäsen")) {
                     joukkue.jasenet.push(value);
@@ -130,20 +148,20 @@ class Controller {
                 let joukkueet = util.getJoukkueet(data);
                 let newRow = create.teamRow(joukkueet[joukkueet.length - 1]);
                 util.getByID("tulosTable").appendChild(create.teamRow(joukkue));
-                if (Controller.jasenInputCount() > 2) for (let i = 3; i <= Controller.jasenInputCount(); i++) util.removeEl("p_input_1_" + i);
                 form.reset();
             }
         }
+        Controller.removeExtraJasenInputs();
     }
 
     /**
      * Checks whether the form is empty or not
      * @returns {boolean} - Is the form valid
      */
-    static validateForm(formID,buttonID) {
-        let inputs:NodeListOf<HTMLInputElement> = document.getElementById(formID).getElementsByTagName('input');
+    static validateForm(formID, buttonID) {
+        let inputs: NodeListOf<HTMLInputElement> = document.getElementById(formID).getElementsByTagName("input");
         let disableButtons = false;
-        for (let input of inputs) if (input.value == null || input.value == '') disableButtons = true;
+        for (let input of inputs) if (input.value == null || input.value == "") disableButtons = true;
         util.getByID(buttonID).disabled = disableButtons;
     }
 
@@ -162,10 +180,10 @@ class Controller {
      */
     static setValidations(object) {
         object.onfocusout = function() {
-            Controller.validateForm('form_lisaaJoukkue','joukkueButton');
+            Controller.validateForm("form_lisaaJoukkue", "joukkueButton");
         };
         object.oninput = function() {
-            Controller.validateForm('form_lisaaJoukkue','joukkueButton');
+            Controller.validateForm("form_lisaaJoukkue", "joukkueButton");
         };
     }
 
@@ -177,9 +195,6 @@ class Controller {
     static updateJoukkueet(team, form): void {
         util.getJoukkueet(data)[Controller.teamIndex] = team;
         form.reset();
-        util.removeEl("tulosTable");
-        create.table(util.getJoukkueet(data));
-        create.toggleEditButtons();
     }
 
     /**
@@ -187,6 +202,7 @@ class Controller {
      * @param jj - Name of the team
      */
     static editJoukkue(jj) {
+        const fields = this.jasenInputValues();
         if (!create.editModeON) {
             create.toggleEditButtons();
             let joukkueet = util.getJoukkueet(data);
@@ -197,33 +213,20 @@ class Controller {
                     team = joukkueet[i];
                 }
             }
-            let FormId = 3;
-            util.getByID("input_1_0").value = team.nimi;
+            this.joukkueFormInputs()[0].value = team.nimi;
             for (let i = 0; i < team.jasenet.length; i++) {
-                let id = i + 1;
                 if (i > 1) {
                     create.formRow(util.getByID("jasenet_fieldset"), `Jäsen ${i + 1}`, false, true, util.getByID("p_jasenButton"), true, i.toString());
-                    util.getByID(`input_1_${id}`).value = team.jasenet[i].toString();
-                    FormId++;
+                    fields[i].value = team.jasenet[i].toString();
                 } else {
-                    util.getByID(`input_1_${id}`).value = team.jasenet[i].toString();
+                    fields[i].value = team.jasenet[i].toString();
                 }
             }
-        } else {
-            window.alert("Please finish editing before selecting a new team");
         }
     }
 }
 
 class create {
-    static get input_ID(): number {
-        return this._input_ID;
-    }
-
-    static set input_ID(value: number) {
-        this._input_ID = value;
-    }
-    private static _input_ID = 0;
     static formID = 0;
     static editModeON = false;
     static emptyForm = true;
@@ -236,16 +239,11 @@ class create {
         create.submitFormButton(util.getByTag("fieldset")[1], "editButton", "Tallenna", false);
         create.submitFormButton(util.getByTag("fieldset")[1], "cancelButton", "Peruuta", true);
         util.getByID("cancelButton").onclick = function() {
-            if (Controller.jasenInputCount() > 2) {
-                for (let i = 3; i <= Controller.jasenInputCount(); i++) {
-                    util.removeEl(`p_input_1_${i}`);
-                }
-            }
+            Controller.removeExtraJasenInputs();
             let form: HTMLFormElement = util.getByID("form_lisaaJoukkue");
             document.getElementsByTagName("legend")[1].textContent = "Uusi joukkue";
             form.reset();
-            create.input_ID = 3;
-            create.toggleEditButtons();
+            create.setEditButtons();
         };
     }
 
@@ -310,35 +308,32 @@ class create {
             this.formRow(fieldSet, "Koodi", true);
             this.submitFormButton(fieldSet, "rasti", "Lisää rasti");
         } else if (type === "joukkue") {
-            this.input_ID = 0;
             form.removeAttribute("action");
             form.id = "form_lisaaJoukkue";
             this.formID = 1;
-            if (form.attachEvent) {
-                form.attachEvent("submit", Controller.saveJoukkue);
-            } else {
-                form.addEventListener("submit", Controller.saveJoukkue);
-            }
             this.formRow(fieldSet, "Nimi", true, false, false, true);
             let fieldSetJasenet: HTMLElement = this.element("fieldSet", "", "jasenet_fieldset");
             let legendJasenet: HTMLElement = this.element("legend", "Jäsenet");
             fieldSet.appendChild(fieldSetJasenet);
             fieldSetJasenet.appendChild(legendJasenet);
-            this.formRow(fieldSetJasenet, "Jäsen 1", true, false, false, true);
-            this.formRow(fieldSetJasenet, "Jäsen 2", true, false, false, true);
+            this.formRow(fieldSetJasenet, "Jäsen 1", true, false, false, true, "1");
+            this.formRow(fieldSetJasenet, "Jäsen 2", true, false, false, true, "2");
             let buttonRow = this.submitFormButton(fieldSetJasenet, "jasenButton", "Lisää jäsen", true);
-            let jasenMaara = 2;
-            util.getByID("jasenButton").onclick = function() {
-                jasenMaara++;
-                create.formRow(fieldSetJasenet, "Jasen " + Controller.jasenInputCount() + 1, false, true, buttonRow);
-            };
+            document.getElementById("jasenButton").addEventListener("click", create.addNewJasenRow);
             let joukkueButton = this.submitFormButton(fieldSet, "joukkueButton", "Lisää joukkue");
+            document.getElementById("joukkueButton").addEventListener("click", Controller.saveJoukkue);
             util.getByID("joukkueButton").disabled = true;
         } else {
             return;
         }
     }
 
+    static addNewJasenRow(e) {
+        e.preventDefault();
+        create.formRow(util.getByID("jasenet_fieldset"), `Jasen ${Controller.jasenInputCount() + 1}`, false, true, util.getByID("p_jasenButton"), true);
+        util.getByID("cancelButton").style.display = "block";
+    }
+    t;
     /**
      * Creates an row with input to a form
      * @param appendable - The top level element, most likely fieldSet
@@ -351,8 +346,7 @@ class create {
      */
     static formRow(appendable, inputLabel: string, required?, before?: boolean, beforeElement?, validate?, id?: string) {
         let row = this.element("p");
-        if (id != undefined) row.id = `p_input_1_${this._input_ID}`;
-        else row.id = `p_input_1_${this._input_ID}`;
+        row.setAttribute("class", "formRow");
         row.appendChild(this.input(inputLabel, required, validate));
         if (before) appendable.insertBefore(row, beforeElement);
         else appendable.appendChild(row);
@@ -388,16 +382,14 @@ class create {
     static input(inputLabel, required?, validate?) {
         let label: HTMLLabelElement = this.element("label", inputLabel + ": ");
         let input = this.element("input");
-        let inputID = "input_" + this.formID + "_" + this.input_ID;
+        let inputID = `input_${inputLabel}`;
         if (required) input.required = "required";
         if (validate) Controller.setValidations(input);
         input.type = "text";
         input.val = "";
         input.name = inputLabel.toLowerCase();
         label.htmlFor = inputID;
-        input.id = inputID;
         input.class = "formInput";
-        this.input_ID++;
         label.appendChild(input);
         return label;
     }
@@ -826,9 +818,14 @@ class util {
      * Toggles HTMLDOM element visibility
      * @param id - Id to toggle
      */
-    static toggleDiv(id) {
-        let div = util.getByID(id);
-        div.style.display = div.style.display == "none" ? "block" : "none";
+    static toggleDiv(id: string) {
+        try {
+            let div = util.getByID(id);
+            div.style.display = div.style.display == "none" ? "block" : "none";
+        } catch (err) {
+            LOGGER.debug(`Could not find ID: ${id}`);
+            LOGGER.debug(err);
+        }
     }
 
     /**
@@ -837,16 +834,32 @@ class util {
      */
     static removeEl(elemID) {
         let elem = util.getByID(elemID);
-        if (elem.parentNode) {
-            elem.parentNode.removeChild(elem);
+        try {
+            if (elem.parentNode) {
+                elem.parentNode.removeChild(elem);
+            }
+        } catch (err) {
+            LOGGER.debug(`Failed removing node with id: ${elemID}`);
+            LOGGER.debug(err);
+        }
+    }
+
+    static removeElementByNode(node) {
+        try {
+            if (node.parentNode) {
+                node.parentNode.removeChild(node);
+            }
+        } catch (err) {
+            LOGGER.debug(`Failed removing node: ${node}`);
+            LOGGER.debug(err);
         }
     }
 }
 
-class LOGGER{
-    static time:string = new Date().toLocaleString();
-    static debug(message){
-        if (printDebug) console.log(`${this.time} ${message}`)
+class LOGGER {
+    static time: string = new Date().toLocaleString();
+    static debug(message) {
+        if (printDebug) console.log(`${this.time} ${message}`);
     }
 }
 
