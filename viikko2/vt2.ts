@@ -1,6 +1,7 @@
 "use strict";
 
 const printDebug = true;
+let editModeOn = false;
 
 /**
  * Main class
@@ -158,7 +159,7 @@ class Controller {
         let form: HTMLFormElement = util.getByID("form_lisaaJoukkue");
         let formData = new FormData(form);
         let values = Controller.joukkueFormInputs();
-        if (create.editModeON) {
+        if (editModeOn) {
             Controller.editedJoukkue = util.getJoukkueet(data)[Controller.teamIndex];
             console.log(Controller.editedJoukkue);
             Controller.editedJoukkue.nimi = Controller.joukkueFormInputs()[0].value;
@@ -171,7 +172,8 @@ class Controller {
             }
             Controller.updateJoukkueTable(Controller.editedJoukkue, form);
             create.toggleEditButtons();
-            console.log(Controller.editedJoukkue);
+            editModeOn = false;
+            console.log(editModeOn);
         } else {
             let joukkue: Joukkue = new Joukkue(values[0].value, "00:00:00", [], util.randomInt(16), "2h", 0);
             formData.forEach(function(value, key) {
@@ -191,8 +193,11 @@ class Controller {
                 let newRow = create.teamRow(joukkueet[joukkueet.length - 1]);
                 util.getByID("tulosTable").appendChild(create.teamRow(joukkue));
             }
+            editModeOn = false;
         }
+        editModeOn = false;
         Controller.removeExtraJasenInputs();
+        create.updateLeimausTable();
         form.reset();
         document.getElementById("joukkueButton").disabled = true;
     }
@@ -257,7 +262,6 @@ class Controller {
         teamEl.appendChild(teamAh);
         teamEl.appendChild(document.createElement("br"));
         teamEl.appendChild(document.createTextNode(jasenString));
-        parentRow = teamEl;
         form.reset();
     }
 
@@ -278,7 +282,8 @@ class Controller {
      */
     static editJoukkue(teamID) {
         const fields = this.jasenInputValues();
-        if (!create.editModeON) {
+        if (!editModeOn) {
+            editModeOn = true;
             create.toggleEditButtons();
             let joukkueet = util.getJoukkueet(data);
             for (let i = 0; i < joukkueet.length; i++) {
@@ -299,7 +304,7 @@ class Controller {
             }
         }
     }
-
+t
     static checkCheckboxes(){
         let arr = [];
         let count = 0;
@@ -330,7 +335,6 @@ class Controller {
 
 class create {
     static formID = 0;
-    static editModeON = false;
     static emptyForm = true;
     static legendText = "Uusi joukkue";
 
@@ -348,6 +352,7 @@ class create {
             form.reset();
             create.setEditButtons();
             create.updateLeimausTable();
+            editModeOn = false;
         };
     }
 
@@ -370,7 +375,6 @@ class create {
         util.toggleDiv("joukkueButton");
         util.toggleDiv("editButton");
         util.toggleDiv("cancelButton");
-        this.editModeON = this.editModeON != true;
     }
 
     /**
@@ -615,7 +619,6 @@ class create {
         } else {
             let rows: NodeListOf<HTMLElementTagNameMap["tr"]>;
             rows = document.getElementById("leimausTable").getElementsByTagName("tr");
-            console.log(rows.length);
             if (rows.length > 1) {
                 for (let i = rows.length - 1; i >= 1; i--) {
                     util.removeElementByNode(rows[i]);
