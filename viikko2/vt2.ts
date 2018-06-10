@@ -25,7 +25,7 @@ class TulosPalvelu {
         let editJoukkueCard = document.createElement("div");
         editJoukkueCard.setAttribute("id", "joukkue_body");
         editJoukkueCard.setAttribute("class", "card");
-        document.getElementById('tupa').setAttribute("class", "card");
+        document.getElementById("tupa").setAttribute("class", "card");
         document.body.appendChild(rasti_container);
         document.body.appendChild(joukkue_container);
         create.table(util.getJoukkueet(data));
@@ -44,12 +44,13 @@ class TulosPalvelu {
         util.wrap(rasti_container, form_container);
         util.wrap(form_container, container);
         let rastiLeimaukset = create.card("Rastileimaukset", "Tarkastele rastileimauksia");
-        joukkue_container.appendChild(rastiLeimaukset);
         let link = document.createElement("link");
         link.setAttribute("rel", "stylesheet");
         link.setAttribute("type", "text/css");
         link.setAttribute("href", "https://fonts.googleapis.com/css?family=Roboto");
         document.head.appendChild(link);
+        joukkue_container.appendChild(rastiLeimaukset);
+        create.rastiLeimaukset();
     }
 }
 
@@ -119,7 +120,6 @@ class Controller {
         let rows = Controller.jasenRows();
         if (rows.length > 2)
             for (let i = rows.length - 1; i >= 2; i--) {
-                LOGGER.debug(`Removing node: ${rows[i]}`);
                 util.removeElementByNode(rows[i]);
             }
     }
@@ -192,7 +192,7 @@ class Controller {
         }
         Controller.removeExtraJasenInputs();
         form.reset();
-        document.getElementById('joukkueButton').disabled = true;
+        document.getElementById("joukkueButton").disabled = true;
     }
 
     /**
@@ -286,6 +286,7 @@ class Controller {
                     team = joukkueet[i];
                 }
             }
+            create.updateLeimausTable(team);
             this.joukkueFormInputs()[0].value = team.nimi;
             for (let i = 0; i < team.jasenet.length; i++) {
                 if (i > 1) {
@@ -318,6 +319,7 @@ class create {
             document.getElementsByTagName("legend")[1].textContent = "Uusi joukkue";
             form.reset();
             create.setEditButtons();
+            create.updateLeimausTable();
         };
     }
 
@@ -545,19 +547,75 @@ class create {
         return row;
     }
 
-    static rastiLeimaukset() {
-        let nav = create.element("nav");
-        let ul = create.element("ul");
-        nav.appendChild(ul);
-    }
-
     static card(title: string, desription: string): HTMLElement {
         let cardContainer: HTMLElement = document.createElement("div");
         let cardTitle: HTMLElement = document.createElement("h2");
         cardTitle.textContent = title;
+        cardContainer.id = title.toLowerCase().replace(/ /gi, "_");
         cardContainer.setAttribute("class", "card");
         cardContainer.appendChild(cardTitle);
         return cardContainer;
+    }
+
+    static rastiLeimaukset() {
+        let leimaustableContainer = create.element("div", "", "leimausTableContainer");
+        let leimausTable = create.element("table", "", "leimausTable");
+        let headerRow = document.createElement("tr");
+        headerRow.appendChild(create.element("th", ""));
+        headerRow.appendChild(create.element("th", "Aika"));
+        headerRow.appendChild(create.element("th", "Rasti"));
+        headerRow.appendChild(create.element("th", ""));
+        leimausTable.appendChild(headerRow);
+        leimaustableContainer.appendChild(leimausTable);
+        document.getElementById("rastileimaukset").appendChild(leimaustableContainer);
+        create.submitFormButton(document.getElementById("rastileimaukset"), "addLeimausButton", "Lisää leimaus", true);
+        document.getElementById("addLeimausButton").disabled = true;
+    }
+
+    static updateLeimausTable(joukkue?) {
+        if (joukkue != undefined) {
+            let leimaukset = util.getKaydytRastit(joukkue);
+            let index = 0;
+            let leimausTable = document.getElementById("leimausTable");
+            for (let rasti of leimaukset) {
+                leimausTable.appendChild(create.leimausRow(rasti.aika, rasti.rasti, index));
+                index++;
+            }
+        } else {
+            let rows: NodeListOf<HTMLElementTagNameMap["tr"]>;
+            rows = document.getElementById("leimausTable").getElementsByTagName("tr");
+            console.log(rows.length);
+            if (rows.length > 1) {
+                for (let i = rows.length - 1; i >= 1; i--) {
+                    util.removeElementByNode(rows[i]);
+                }
+            }
+        }
+    }
+
+    static leimausRow(aika: string, rasti: string, indexID): HTMLElement {
+        let row = document.createElement("tr");
+        let selectCell = create.element("td");
+        let selectCheckBox = create.element("input");
+        let selectCheckBoxLabel = create.element("label");
+        let selectCheckBoxLabeSpan = create.element("span");
+        selectCheckBox.type = "checkbox";
+        selectCheckBox.setAttribute("class", "checkbox");
+        selectCheckBox.id = `checkbox_${indexID}`;
+        selectCheckBoxLabel.htmlFor = `checkbox_${indexID}`;
+        selectCell.appendChild(selectCheckBox);
+        selectCheckBoxLabel.appendChild(selectCheckBoxLabeSpan);
+        selectCell.appendChild(selectCheckBoxLabel);
+        let aikaCell = create.element("td", aika);
+        aikaCell.contentEditable = "true";
+        let rastiCell = create.element("td", rasti);
+        rastiCell.contentEditable = "true";
+        let poistoCell = create.element("td", "-");
+        row.appendChild(selectCell);
+        row.appendChild(aikaCell);
+        row.appendChild(rastiCell);
+        row.appendChild(poistoCell);
+        return row;
     }
 }
 
@@ -962,13 +1020,14 @@ class util {
         }
     }
 
-    static removeElementByNode(node) {
+    static removeElementByNode(node: HTMLElement) {
         try {
             if (node.parentNode) {
+                LOGGER.debug(`Removing node: ${node}`);
                 node.parentNode.removeChild(node);
             }
         } catch (err) {
-            LOGGER.debug(`Failed removing node: ${node}`);
+            LOGGER.debug(`Failed removing node: ${node.nodeName}`);
             LOGGER.debug(err);
         }
     }
