@@ -11,16 +11,20 @@ class TulosPalvelu {
      * I like to have this to not accidentally executing something unwanted
      */
     public static main(): void {
-        let header = document.createElement('div');
-        header.setAttribute('id','header');
-        let container = document.createElement('div');
-        container.setAttribute('id','container');
-        let form_container = document.createElement('div');
-        form_container.setAttribute('id','form_container');
-        let rasti_container = document.createElement('div');
-        rasti_container.setAttribute('id','rasti_container');
-        let joukkue_container = document.createElement('div');
-        joukkue_container.setAttribute('id','joukkue_container');
+        let header = document.createElement("div");
+        header.setAttribute("id", "header");
+        let container = document.createElement("div");
+        container.setAttribute("id", "container");
+        let form_container = document.createElement("div");
+        form_container.setAttribute("id", "form_container");
+        let rasti_container = document.createElement("div");
+        rasti_container.setAttribute("id", "rasti_container");
+        rasti_container.setAttribute("class", "card");
+        let joukkue_container = document.createElement("div");
+        joukkue_container.setAttribute("id", "joukkue_container");
+        let editJoukkueCard = document.createElement("div");
+        editJoukkueCard.setAttribute("id", "joukkue_body");
+        editJoukkueCard.setAttribute("class", "card");
         document.body.appendChild(rasti_container);
         document.body.appendChild(joukkue_container);
         create.table(util.getJoukkueet(data));
@@ -28,19 +32,22 @@ class TulosPalvelu {
         create.form("joukkue", "Uusi joukkue");
         create.createEditButtons();
         create.setEditButtons();
-        util.wrap(document.body.getElementsByTagName('h1')[0],header);
-        util.wrap(document.body.getElementsByTagName('h2')[0],rasti_container);
-        util.wrap(util.getByID('form_lisaaRasti'),rasti_container);
-        util.wrap(util.getByID('joukkue'),joukkue_container);
-        util.wrap(util.getByID('form_lisaaJoukkue'),joukkue_container);
-        util.wrap( util.getByID('tupa'),container);
-        util.wrap(rasti_container,form_container);
-        util.wrap(joukkue_container,form_container);
-        util.wrap(form_container,container);
-        var link = document.createElement('link');
-        link.setAttribute('rel', 'stylesheet');
-        link.setAttribute('type', 'text/css');
-        link.setAttribute('href', 'https://fonts.googleapis.com/css?family=Roboto');
+        util.wrap(document.body.getElementsByTagName("h1")[0], header);
+        util.wrap(document.body.getElementsByTagName("h2")[0], rasti_container);
+        util.wrap(util.getByID("form_lisaaRasti"), rasti_container);
+        util.wrap(util.getByID("joukkue"), editJoukkueCard);
+        util.wrap(util.getByID("form_lisaaJoukkue"), editJoukkueCard);
+        joukkue_container.appendChild(editJoukkueCard);
+        util.wrap(util.getByID("tupa"), container);
+        util.wrap(joukkue_container, form_container);
+        util.wrap(rasti_container, form_container);
+        util.wrap(form_container, container);
+        let rastiLeimaukset = create.card("Rastileimaukset", "Tarkastele rastileimauksia");
+        joukkue_container.appendChild(rastiLeimaukset);
+        let link = document.createElement("link");
+        link.setAttribute("rel", "stylesheet");
+        link.setAttribute("type", "text/css");
+        link.setAttribute("href", "https://fonts.googleapis.com/css?family=Roboto");
         document.head.appendChild(link);
     }
 }
@@ -90,6 +97,7 @@ class Rasti {
  */
 class Controller {
     static teamIndex: number;
+
     static jasenInputCount(): number {
         return document.getElementById("jasenet_fieldset").getElementsByTagName("input").length;
     }
@@ -122,8 +130,8 @@ class Controller {
     static newRasti(e) {
         if (e.preventDefault) e.preventDefault();
         let form: HTMLFormElement = util.getByID("form_lisaaRasti");
-        let formData = new FormData(form);
-        let rasti = {};
+        let formData: FormData = new FormData(form);
+        let rasti: Object = {};
         let skip = false;
         rasti.kilpailu = util.randomInt(16);
         for (let pair of formData.entries()) {
@@ -146,19 +154,21 @@ class Controller {
         e.preventDefault();
         let form: HTMLFormElement = util.getByID("form_lisaaJoukkue");
         let formData = new FormData(form);
-        let skip: boolean = false;
         let values = Controller.joukkueFormInputs();
         if (create.editModeON) {
             let team: Joukkue = util.getJoukkueet(data)[Controller.teamIndex];
-            team.nimi = util.getByID("input_1_0").value;
+            console.log(team);
+            team.nimi = Controller.joukkueFormInputs()[0].value;
             team.jasenet = [];
+            team.id = util.getJoukkueet(data)[Controller.teamIndex].id;
+            util.updateJoukkue(team);
             for (let input of document.getElementById("jasenet_fieldset").getElementsByTagName("input")) {
                 LOGGER.debug("Adding a new member");
                 team.jasenet.push(input.value);
             }
+            Controller.updateJoukkueTable(team, form);
             create.toggleEditButtons();
-            Controller.updateJoukkueet(team, form);
-            form.reset();
+            console.log(team);
         } else {
             let joukkue: Joukkue = new Joukkue(values[0].value, "00:00:00", [], util.randomInt(16), "2h", 0);
             formData.forEach(function(value, key) {
@@ -177,10 +187,11 @@ class Controller {
                 let joukkueet = util.getJoukkueet(data);
                 let newRow = create.teamRow(joukkueet[joukkueet.length - 1]);
                 util.getByID("tulosTable").appendChild(create.teamRow(joukkue));
-                form.reset();
             }
         }
         Controller.removeExtraJasenInputs();
+        form.reset();
+        document.getElementById('joukkueButton').disabled = true;
     }
 
     /**
@@ -221,23 +232,55 @@ class Controller {
      * @param team - Team to update
      * @param form - Resets the form where the data is coming from
      */
-    static updateJoukkueet(team, form): void {
+    static updateJoukkueTable(team, form): void {
         util.getJoukkueet(data)[Controller.teamIndex] = team;
+        let joukkueet = util.getJoukkueet(data);
+        let parentRow;
+        for (let i = 0; i < joukkueet.length; i++) {
+            if (joukkueet[i].id === team.id) {
+                Controller.teamIndex = i;
+                parentRow = Controller.getTeamFromTable(joukkueet[i].id);
+                joukkueet[i] = team;
+                console.log(parentRow);
+                break;
+            }
+        }
+        let teamEl = parentRow.getElementsByTagName("td")[1];
+        let jasenString: string = team.jasenet != null ? team.jasenet.join(", ") : "";
+        let teamAh = create.element("a", team.nimi);
+        teamAh.href = `javascript:Controller.editJoukkue("${team.id.toString()}")`;
+        teamAh.id = team.id;
+        teamEl.textContent = "";
+        teamEl.appendChild(teamAh);
+        teamEl.appendChild(document.createElement("br"));
+        teamEl.appendChild(document.createTextNode(jasenString));
+        parentRow = teamEl;
         form.reset();
+    }
+
+    static getTeamFromTable(teamID: string): HTMLElement {
+        const teamNames = document.getElementById("tulosTable").getElementsByTagName("a");
+        let returnable;
+        for (let row of teamNames) {
+            if (row.id == teamID) {
+                returnable = row.parentNode.parentNode;
+            }
+        }
+        return returnable;
     }
 
     /**
      * Edits a team
      * @param jj - Name of the team
      */
-    static editJoukkue(jj) {
+    static editJoukkue(teamID) {
         const fields = this.jasenInputValues();
         if (!create.editModeON) {
             create.toggleEditButtons();
             let joukkueet = util.getJoukkueet(data);
             let team = {};
             for (let i = 0; i < joukkueet.length; i++) {
-                if (joukkueet[i].nimi === jj) {
+                if (joukkueet[i].id.toString() === teamID) {
                     Controller.teamIndex = i;
                     team = joukkueet[i];
                 }
@@ -265,7 +308,8 @@ class create {
      * Creates the form buttons
      */
     static createEditButtons() {
-        create.submitFormButton(util.getByTag("fieldset")[1], "editButton", "Tallenna", false);
+        create.submitFormButton(util.getByTag("fieldset")[1], "editButton", "Tallenna", true);
+        util.getByID("editButton").addEventListener("click", Controller.saveJoukkue);
         create.submitFormButton(util.getByTag("fieldset")[1], "cancelButton", "Peruuta", true);
         util.getByID("cancelButton").onclick = function() {
             Controller.removeExtraJasenInputs();
@@ -332,15 +376,15 @@ class create {
             }
             form.removeAttribute("action");
             form.id = "form_lisaaRasti";
-            this.formRow(fieldSet, "Latitude", true,false,'',false,'','Rastin pituusaste');
-            this.formRow(fieldSet, "Longitude", true,false,'',false,'','Rastin leveysaste');
-            this.formRow(fieldSet, "Koodi", true,false,'',false,'','Rastin koodi');
-            this.submitFormButton(fieldSet, "rasti", "Rasti");
+            this.formRow(fieldSet, "Latitude", true, false, "", false, "", "Rastin pituusaste");
+            this.formRow(fieldSet, "Longitude", true, false, "", false, "", "Rastin leveysaste");
+            this.formRow(fieldSet, "Koodi", true, false, "", false, "", "Rastin koodi");
+            this.submitFormButton(fieldSet, "rasti", "Lisää rasti");
         } else if (type === "joukkue") {
             form.removeAttribute("action");
             form.id = "form_lisaaJoukkue";
             this.formID = 1;
-            this.formRow(fieldSet, "Nimi", true, false, false, true,'',"Joukkueen nimi");
+            this.formRow(fieldSet, "Nimi", true, false, false, true, "", "Joukkueen nimi");
             let fieldSetJasenet: HTMLElement = this.element("fieldSet", "", "jasenet_fieldset");
             let legendJasenet: HTMLElement = this.element("legend", "Jäsenet");
             fieldSet.appendChild(fieldSetJasenet);
@@ -349,7 +393,7 @@ class create {
             this.formRow(fieldSetJasenet, "Jäsen 2", true, false, false, true, "2");
             let buttonRow = this.submitFormButton(fieldSetJasenet, "jasenButton", "Lisää jäsen", true);
             document.getElementById("jasenButton").addEventListener("click", create.addNewJasenRow);
-            let joukkueButton = this.submitFormButton(fieldSet, "joukkueButton", "Lisää joukkue");
+            let joukkueButton = this.submitFormButton(fieldSet, "joukkueButton", "Lisää joukkue", true);
             document.getElementById("joukkueButton").addEventListener("click", Controller.saveJoukkue);
             util.getByID("joukkueButton").disabled = true;
         } else {
@@ -381,10 +425,10 @@ class create {
      * @param {boolean} validate - Does the function validate when exited
      * @param id
      */
-    static formRow(appendable, inputLabel: string, required?, before?: boolean, beforeElement?, validate?, id?: string,addText?:string) {
+    static formRow(appendable, inputLabel: string, required?, before?: boolean, beforeElement?, validate?, id?: string, addText?: string) {
         let row = this.element("p");
         row.setAttribute("class", "formRow");
-        row.appendChild(this.input(inputLabel, required, validate,addText));
+        row.appendChild(this.input(inputLabel, required, validate, addText));
         if (before) appendable.insertBefore(row, beforeElement);
         else appendable.appendChild(row);
     }
@@ -419,7 +463,7 @@ class create {
      */
     static input(inputLabel, required?, validate?, addText?) {
         let label: HTMLLabelElement = this.element("label");
-        label.setAttribute('class','input');
+        label.setAttribute("class", "input");
         let input = this.element("input");
         let inputID = `input_${inputLabel}`;
         if (required) input.required = "required";
@@ -431,7 +475,7 @@ class create {
         label.htmlFor = inputID;
         input.class = "formInput";
         label.appendChild(input);
-        if (addText != undefined) label.appendChild(this.element('span',addText));
+        if (addText != undefined) label.appendChild(this.element("span", addText));
         return label;
     }
 
@@ -469,7 +513,7 @@ class create {
             joukkue.aika = util.getAika(joukkue);
             joukkue.matka = util.getMatka(joukkue);
             tulosTable.appendChild(create.teamRow(joukkue));
-            util.getByID("a_" + joukkue.nimi).addEventListener("onclick", Controller.editJoukkue, false);
+            util.getByID(joukkue.id).addEventListener("onclick", Controller.editJoukkue, false);
         }
     }
 
@@ -487,8 +531,8 @@ class create {
         let pointsEl = create.element("td", team.pisteet);
         let aika = create.element("td", team.aika);
         let matka = create.element("td", team.matka + " km");
-        teamAh.href = `javascript:Controller.editJoukkue("${team.nimi.toString()}")`;
-        teamAh.id = "a_" + team.nimi;
+        teamAh.href = `javascript:Controller.editJoukkue("${team.id.toString()}")`;
+        teamAh.id = team.id;
         row.appendChild(seriesEl);
         row.appendChild(teamEl);
         teamEl.appendChild(teamAh);
@@ -500,10 +544,19 @@ class create {
         return row;
     }
 
-    static rastiLeimaukset(){
-        let nav = create.element('nav');
-        let ul = create.element('ul');
+    static rastiLeimaukset() {
+        let nav = create.element("nav");
+        let ul = create.element("ul");
         nav.appendChild(ul);
+    }
+
+    static card(title: string, desription: string): HTMLElement {
+        let cardContainer: HTMLElement = document.createElement("div");
+        let cardTitle: HTMLElement = document.createElement("h2");
+        cardTitle.textContent = title;
+        cardContainer.setAttribute("class", "card");
+        cardContainer.appendChild(cardTitle);
+        return cardContainer;
     }
 }
 
@@ -617,6 +670,17 @@ class util {
             }
         }
         return arr;
+    }
+
+    static updateJoukkue(joukkue) {
+        for (let sarja of data.sarjat) {
+            for (let team of sarja.joukkueet) {
+                if (team.id === joukkue.id) {
+                    team.nimi = joukkue.nimi;
+                    team.jasenet = joukkue.jasenet;
+                }
+            }
+        }
     }
 
     /**
@@ -876,10 +940,10 @@ class util {
     }
 
     static wrap(toWrap, wrapper?) {
-        wrapper = wrapper || document.createElement('div');
+        wrapper = wrapper || document.createElement("div");
         toWrap.parentNode.appendChild(wrapper);
         return wrapper.appendChild(toWrap);
-    };
+    }
 
     /**
      * Removes the element
@@ -911,6 +975,7 @@ class util {
 
 class LOGGER {
     static time: string = new Date().toLocaleString();
+
     static debug(message) {
         if (printDebug) console.log(`${this.time} ${message}`);
     }
