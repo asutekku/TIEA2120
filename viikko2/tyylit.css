@@ -189,8 +189,21 @@ input{
     color: #7d7d7f;
     text-align:left;
 }
+
+table {
+    border-collapse: collapse;
+}
+
 #tulosTable tr{
     height: 47px;
+    border-style: solid;
+    border-color: #EEEEEF;
+    border-top-width: 0;
+    border-right-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-left-width: 0;
+    border-bottom-width: 1px;
 }
 
 nav ul{height:200px; width:18%;}

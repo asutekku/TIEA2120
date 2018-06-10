@@ -25,6 +25,7 @@ class TulosPalvelu {
         let editJoukkueCard = document.createElement("div");
         editJoukkueCard.setAttribute("id", "joukkue_body");
         editJoukkueCard.setAttribute("class", "card");
+        document.getElementById('tupa').setAttribute("class", "card");
         document.body.appendChild(rasti_container);
         document.body.appendChild(joukkue_container);
         create.table(util.getJoukkueet(data));
