@@ -99,6 +99,8 @@ class Rasti {
  */
 class Controller {
     static teamIndex: number;
+    static arrayOfLeimaukset: any;
+    static editedJoukkue:any;
 
     static jasenInputCount(): number {
         return document.getElementById("jasenet_fieldset").getElementsByTagName("input").length;
@@ -157,19 +159,19 @@ class Controller {
         let formData = new FormData(form);
         let values = Controller.joukkueFormInputs();
         if (create.editModeON) {
-            let team: Joukkue = util.getJoukkueet(data)[Controller.teamIndex];
-            console.log(team);
-            team.nimi = Controller.joukkueFormInputs()[0].value;
-            team.jasenet = [];
-            team.id = util.getJoukkueet(data)[Controller.teamIndex].id;
-            util.updateJoukkue(team);
+            Controller.editedJoukkue = util.getJoukkueet(data)[Controller.teamIndex];
+            console.log(Controller.editedJoukkue);
+            Controller.editedJoukkue.nimi = Controller.joukkueFormInputs()[0].value;
+            Controller.editedJoukkue.jasenet = [];
+            Controller.editedJoukkue.id = util.getJoukkueet(data)[Controller.teamIndex].id;
+            util.updateJoukkue(Controller.editedJoukkue);
             for (let input of document.getElementById("jasenet_fieldset").getElementsByTagName("input")) {
                 LOGGER.debug("Adding a new member");
-                team.jasenet.push(input.value);
+                Controller.editedJoukkue.jasenet.push(input.value);
             }
-            Controller.updateJoukkueTable(team, form);
+            Controller.updateJoukkueTable(Controller.editedJoukkue, form);
             create.toggleEditButtons();
-            console.log(team);
+            console.log(Controller.editedJoukkue);
         } else {
             let joukkue: Joukkue = new Joukkue(values[0].value, "00:00:00", [], util.randomInt(16), "2h", 0);
             formData.forEach(function(value, key) {
@@ -279,23 +281,49 @@ class Controller {
         if (!create.editModeON) {
             create.toggleEditButtons();
             let joukkueet = util.getJoukkueet(data);
-            let team = {};
             for (let i = 0; i < joukkueet.length; i++) {
                 if (joukkueet[i].id.toString() === teamID) {
                     Controller.teamIndex = i;
-                    team = joukkueet[i];
+                    Controller.editedJoukkue = joukkueet[i];
                 }
             }
-            create.updateLeimausTable(team);
-            this.joukkueFormInputs()[0].value = team.nimi;
-            for (let i = 0; i < team.jasenet.length; i++) {
+            create.updateLeimausTable(Controller.editedJoukkue);
+            this.joukkueFormInputs()[0].value = Controller.editedJoukkue.nimi;
+            for (let i = 0; i < Controller.editedJoukkue.jasenet.length; i++) {
                 if (i > 1) {
                     create.formRow(util.getByID("jasenet_fieldset"), `Jäsen ${i + 1}`, false, true, util.getByID("p_jasenButton"), true, i.toString());
-                    fields[i].value = team.jasenet[i].toString();
+                    fields[i].value = Controller.editedJoukkue.jasenet[i].toString();
                 } else {
-                    fields[i].value = team.jasenet[i].toString();
+                    fields[i].value = Controller.editedJoukkue.jasenet[i].toString();
                 }
             }
+        }
+    }
+
+    static checkCheckboxes(){
+        let arr = [];
+        let count = 0;
+        let showButton = false;
+        for (let checkbox of document.getElementById('leimausTable').getElementsByTagName('input')){
+            if (checkbox.checked){
+                count++;
+                showButton = true;
+                arr.push(checkbox);
+            }
+        }
+        document.getElementById('removeLeimausButton').disabled = !showButton;
+        Controller.arrayOfLeimaukset = arr;
+    }
+
+    static removeLeimaukset(){
+        for (let leimaus of Controller.arrayOfLeimaukset){
+            let leimausID = leimaus.parentNode.parentNode.getElementsByTagName('td')[2].textContent;
+            for (let i = 0; i < data.tupa.length;i++){
+                if (data.tupa[i].joukkue == Controller.editedJoukkue.id && data.tupa[i].rasti == leimausID){
+                    data.tupa.splice(i,1);
+                }
+            }
+            util.removeElementByNode(leimaus.parentNode.parentNode);
         }
     }
 }
@@ -568,7 +596,10 @@ class create {
         leimausTable.appendChild(headerRow);
         leimaustableContainer.appendChild(leimausTable);
         document.getElementById("rastileimaukset").appendChild(leimaustableContainer);
+        create.submitFormButton(document.getElementById("rastileimaukset"), "removeLeimausButton", "Poista valitut", true);
         create.submitFormButton(document.getElementById("rastileimaukset"), "addLeimausButton", "Lisää leimaus", true);
+        document.getElementById("removeLeimausButton").disabled = true;
+        document.getElementById("removeLeimausButton").addEventListener("click", Controller.removeLeimaukset, false);
         document.getElementById("addLeimausButton").disabled = true;
     }
 
@@ -602,6 +633,7 @@ class create {
         selectCheckBox.type = "checkbox";
         selectCheckBox.setAttribute("class", "checkbox");
         selectCheckBox.id = `checkbox_${indexID}`;
+        selectCheckBox.addEventListener("click", Controller.checkCheckboxes, false);
         selectCheckBoxLabel.htmlFor = `checkbox_${indexID}`;
         selectCell.appendChild(selectCheckBox);
         selectCheckBoxLabel.appendChild(selectCheckBoxLabeSpan);
