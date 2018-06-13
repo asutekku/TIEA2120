@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "outDir": "./viikko2/build",
+    "outDir": "./viikko3/build",
     "module": "amd",
     "allowJs": true,
     "target": "es6",
     "removeComments": false
   },
   "include": [
-    "./viikko2/*"
+    "./viikko3/*"
   ]
 }
