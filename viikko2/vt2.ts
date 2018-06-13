@@ -150,8 +150,10 @@ class Controller {
             if (pair[1] === "") skip = true;
             if (pair[1] === "rand") {
                 rasti[pair[0].substring(0, 3)] = util.getRandomPoint().toString();
-            } else {
+            } else if (pair[0] !== "koodi"){
                 rasti[pair[0].substring(0, 3)] = pair[1].toString();
+            } else {
+                rasti[pair[0]] = pair[1].toString();
             }
         }
         if (!skip) {
