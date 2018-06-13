@@ -4,10 +4,6 @@ const printDebug = false;
 let editModeOn = false;
 
 /**
- * TODO: Add proper ability to edit and save rastileimaus
- */
-
-/**
  * Main class
  */
 class TulosPalvelu {
@@ -103,11 +99,13 @@ class Rasti {
  * Class to handle the controlling functions
  */
 class Controller {
+    static editedCellContent: any;
     static teamIndex: number;
     static arrayOfLeimaukset: any;
     static editedJoukkue: Joukkue;
-    static currentSort: number[] = [5, 0, 0, 0, 0];
+    static currentSort: number[] = [4, 0, 0, 0, 0];
     static leimausCount: number = 0;
+    private static editedCellType: string;
 
     static jasenInputCount(): number {
         return document.getElementById("jasenet_fieldset").getElementsByTagName("input").length;
@@ -146,7 +144,11 @@ class Controller {
         rasti.kilpailu = util.randomInt(16);
         for (let pair of formData.entries()) {
             if (pair[1] === "") skip = true;
-            rasti[pair[0]] = pair[1].toString();
+            if (pair[1] === "rand") {
+                rasti[pair[0].substring(0, 3)] = util.getRandomPoint().toString();
+            } else {
+                rasti[pair[0].substring(0, 3)] = pair[1].toString();
+            }
         }
         if (!skip) {
             rasti.id = util.randomInt(16);
@@ -205,11 +207,13 @@ class Controller {
         data.sarjat[1].joukkueet.push(joukkue);
         util.getByID("tulosTable").appendChild(create.teamRow(joukkue));
         let sort = Controller.currentSort;
-        let sortedTable = document.getElementById("tulosTable");
-        for (let i = 0; i < sort.length; i++) {
-            if (sort[i] == 5) {
-                util.sortTable(sortedTable, i);
-                console.log("yay");
+        const sortedTable = document.getElementById("tulosTable");
+        for (let i = 0; i < 5; i++) {
+            for (let f = 0; f < 5; f++) {
+                if (sort[f] == i) {
+                    util.sortTable(sortedTable, f);
+                    util.sortTable(sortedTable, f);
+                }
             }
         }
     }
@@ -261,7 +265,6 @@ class Controller {
                 Controller.teamIndex = i;
                 parentRow = Controller.getTeamFromTable(joukkueet[i].id);
                 joukkueet[i] = team;
-                console.log(parentRow);
                 break;
             }
         }
@@ -368,7 +371,46 @@ class Controller {
             }
             util.removeElementByNode(leimaus.parentNode.parentNode);
         }
-        Controller.updateJoukkueStats();t
+        Controller.updateJoukkueStats();
+    }
+
+    static setValidateRastiField(cell) {
+        const aikaRegWhole = /^([0-9]{4})-([0-9]{2})-([0-9]{2})\s([0-9]{2}):([0-9]{2}):([0-9]{2})/;
+        if (cell.textContent.match(aikaRegWhole)) {
+            Controller.editedCellType = "aika";
+        } else {
+            Controller.editedCellType = "rasti";
+        }
+        Controller.editedCellContent = cell.textContent;
+    }
+
+    static validateRastiField(cell) {
+        const cellValue = cell.textContent;
+        const rastiRegex = /^([0-9]{16})/;
+        const aikaRegWhole = /^([0-9]{4})-([0-9]{2})-([0-9]{2})\s([0-9]{2}):([0-9]{2}):([0-9]{2})/;
+        const rastiID = cell.parentNode.getElementsByTagName("td")[2].textContent
+        if (Controller.editedCellType == "aika") {
+            cell.textContent = Controller.editedCellContent;
+            if (cellValue.match(aikaRegWhole)) {
+                for (let i = 0; i < data.tupa.length; i++) {
+                    if (data.tupa[i].joukkue == Controller.editedJoukkue.id && data.tupa[i].rasti == rastiID) {
+                        data.tupa[i].aika = cellValue;
+                        cell.textContent = cellValue;
+                    }
+                }
+            }
+        } else {
+            cell.textContent = Controller.editedCellContent;
+            if (cellValue.match(rastiRegex)) {
+                for (let i = 0; i < data.tupa.length; i++) {
+                    if (data.tupa[i].joukkue == Controller.editedJoukkue.id && data.tupa[i].rasti == parseInt(cell.textContent)) {
+                        data.tupa[i].rasti = cellValue;
+                        cell.textContent = cellValue;
+                    }
+                }
+            }
+        }
+        Controller.updateJoukkueStats();
     }
 
     static removeLeimaus(row) {
@@ -388,7 +430,7 @@ class Controller {
      */
     static setSort(index: number): void {
         Controller.currentSort = Controller.currentSort.map(x => x == 0 ? 0 : x - 1);
-        Controller.currentSort[index] = 5;
+        Controller.currentSort[index] = 4;
         console.log(Controller.currentSort);
     }
 }
@@ -695,6 +737,7 @@ class create {
         const leimausRow = create.leimausRow(aikaString, rastinum.toString(), index);
         document.getElementById("leimausTable").appendChild(leimausRow);
         data.tupa.push({aika: aikaString, rasti: rastinum, joukkue: Controller.editedJoukkue.id});
+        Controller.updateJoukkueStats();
     }
 
     static leimausRow(aika: string, rasti: string, indexID): HTMLElement {
@@ -713,14 +756,25 @@ class create {
         selectCell.appendChild(selectCheckBoxLabel);
         let aikaCell = create.element("td", aika);
         aikaCell.contentEditable = "true";
+        aikaCell.addEventListener('focusout', function (e) {
+            Controller.validateRastiField(aikaCell)
+        }, true);
+        aikaCell.addEventListener('focus', function (e) {
+            Controller.setValidateRastiField(aikaCell)
+        }, true);
         let rastiCell = create.element("td", rasti);
         rastiCell.contentEditable = "true";
+        rastiCell.addEventListener('focusout', function (e) {
+            Controller.validateRastiField(rastiCell)
+        }, true);
+        rastiCell.addEventListener('focus', function (e) {
+            Controller.setValidateRastiField(rastiCell)
+        }, true);
         let poistoCell = create.element("td");
         let poistoButton = create.element("span", "×");
         poistoButton.setAttribute("class", "removeButton");
         let poistoid = Controller.leimausCount;
         poistoButton.id = `leimaus_${poistoid}`;
-        console.log(`leimaus_${Controller.leimausCount}`);
         poistoButton.addEventListener("click", function () {
             Controller.removeLeimaus(row)
         }, false);
@@ -1132,6 +1186,11 @@ class util {
             + pad(d.getUTCHours()) + ':'
             + pad(d.getUTCMinutes()) + ':'
             + pad(d.getUTCSeconds())
+    }
+
+    static getRandomPoint(): number {
+        return Math.round((Math.random() * 360 - 180) * 1000000) / 1000000
+        // .toFixed() returns string, so ' * 1' is a trick to convert to number
     }
 
     /**
