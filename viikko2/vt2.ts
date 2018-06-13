@@ -4,6 +4,10 @@ const printDebug = false;
 let editModeOn = false;
 
 /**
+ * TODO: Add proper ability to edit and save rastileimaus
+ */
+
+/**
  * Main class
  */
 class TulosPalvelu {
@@ -102,6 +106,8 @@ class Controller {
     static teamIndex: number;
     static arrayOfLeimaukset: any;
     static editedJoukkue: Joukkue;
+    static currentSort: number[] = [5, 0, 0, 0, 0];
+    static leimausCount: number = 0;
 
     static jasenInputCount(): number {
         return document.getElementById("jasenet_fieldset").getElementsByTagName("input").length;
@@ -167,16 +173,14 @@ class Controller {
             Controller.editedJoukkue.id = util.getJoukkueet(data)[Controller.teamIndex].id;
             util.updateJoukkue(Controller.editedJoukkue);
             for (let input of document.getElementById("jasenet_fieldset").getElementsByTagName("input")) {
-                LOGGER.debug("Adding a new member");
+                LOGGER.debug(`Adding a new member: ${input.value}`);
                 Controller.editedJoukkue.jasenet.push(input.value);
             }
             Controller.updateJoukkueTable(Controller.editedJoukkue, form);
             create.toggleEditButtons();
-            editModeOn = false;
-            console.log(editModeOn);
-        } else {
+        } else if (!Controller.formEmpty(form)) {
             let joukkue: Joukkue = new Joukkue(values[0].value, "00:00:00", [], util.randomInt(16), "2h", 0);
-            formData.forEach(function(value, key) {
+            formData.forEach(function (value, key) {
                 if (key.startsWith("jäsen")) {
                     joukkue.jasenet.push(value);
                 } else {
@@ -187,13 +191,7 @@ class Controller {
             joukkue.aika = "00:00:00";
             joukkue.matka = 0;
             joukkue.sarja = "2h";
-            if (!Controller.formEmpty(form)) {
-                data.sarjat[1].joukkueet.push(joukkue);
-                let joukkueet = util.getJoukkueet(data);
-                let newRow = create.teamRow(joukkueet[joukkueet.length - 1]);
-                util.getByID("tulosTable").appendChild(create.teamRow(joukkue));
-            }
-            editModeOn = false;
+            Controller.appendJoukkueRow(joukkue);
         }
         editModeOn = false;
         Controller.removeExtraJasenInputs();
@@ -201,6 +199,19 @@ class Controller {
         form.reset();
         document.getElementsByTagName("legend")[0].textContent = "Uusi joukkue";
         document.getElementById("joukkueButton").disabled = true;
+    }
+
+    static appendJoukkueRow(joukkue): void {
+        data.sarjat[1].joukkueet.push(joukkue);
+        util.getByID("tulosTable").appendChild(create.teamRow(joukkue));
+        let sort = Controller.currentSort;
+        let sortedTable = document.getElementById("tulosTable");
+        for (let i = 0; i < sort.length; i++) {
+            if (sort[i] == 5) {
+                util.sortTable(sortedTable, i);
+                console.log("yay");
+            }
+        }
     }
 
     /**
@@ -228,10 +239,10 @@ class Controller {
      * @param object - Object to set the validation to
      */
     static setValidations(object) {
-        object.onfocusout = function() {
+        object.onfocusout = function () {
             Controller.validateForm("form_lisaaJoukkue", "joukkueButton");
         };
-        object.oninput = function() {
+        object.oninput = function () {
             Controller.validateForm("form_lisaaJoukkue", "joukkueButton");
         };
     }
@@ -357,7 +368,28 @@ class Controller {
             }
             util.removeElementByNode(leimaus.parentNode.parentNode);
         }
+        Controller.updateJoukkueStats();t
+    }
+
+    static removeLeimaus(row) {
+        let leimausID = row.getElementsByTagName("td")[2].textContent;
+        for (let i = 0; i < data.tupa.length; i++) {
+            if (data.tupa[i].joukkue == Controller.editedJoukkue.id && data.tupa[i].rasti == leimausID) {
+                data.tupa.splice(i, 1);
+            }
+        }
+        util.removeElementByNode(row);
         Controller.updateJoukkueStats();
+    }
+
+    /**
+     * Sets an array to see which element has been sorted the most recently.
+     * @param {number} index
+     */
+    static setSort(index: number): void {
+        Controller.currentSort = Controller.currentSort.map(x => x == 0 ? 0 : x - 1);
+        Controller.currentSort[index] = 5;
+        console.log(Controller.currentSort);
     }
 }
 
@@ -373,7 +405,7 @@ class create {
         create.submitFormButton(util.getByTag("fieldset")[1], "editButton", "Tallenna", true);
         util.getByID("editButton").addEventListener("click", Controller.saveJoukkue);
         create.submitFormButton(util.getByTag("fieldset")[1], "cancelButton", "Peruuta", true);
-        util.getByID("cancelButton").onclick = function() {
+        util.getByID("cancelButton").onclick = function () {
             Controller.removeExtraJasenInputs();
             let form: HTMLFormElement = util.getByID("form_lisaaJoukkue");
             document.getElementsByTagName("legend")[0].textContent = "Uusi joukkue";
@@ -591,7 +623,7 @@ class create {
         let teamEl = document.createElement("td");
         let teamAh = create.element("a", team.nimi);
         let pointsEl = create.element("td", team.pisteet);
-        let aika = create.element("td", team.aika);
+        let aika = create.element("td", (team.aika == undefined ? "00:00:00" : team.aika));
         let matka = create.element("td", team.matka + " km");
         teamAh.href = `javascript:Controller.editJoukkue("${team.id.toString()}")`;
         teamAh.id = team.id;
@@ -662,7 +694,7 @@ class create {
         let rastinum = util.randomInt(16);
         const leimausRow = create.leimausRow(aikaString, rastinum.toString(), index);
         document.getElementById("leimausTable").appendChild(leimausRow);
-        data.tupa.push({ aika: aikaString, rasti: rastinum, joukkue: Controller.editedJoukkue.id });
+        data.tupa.push({aika: aikaString, rasti: rastinum, joukkue: Controller.editedJoukkue.id});
     }
 
     static leimausRow(aika: string, rasti: string, indexID): HTMLElement {
@@ -683,11 +715,21 @@ class create {
         aikaCell.contentEditable = "true";
         let rastiCell = create.element("td", rasti);
         rastiCell.contentEditable = "true";
-        let poistoCell = create.element("td", "-");
+        let poistoCell = create.element("td");
+        let poistoButton = create.element("span", "×");
+        poistoButton.setAttribute("class", "removeButton");
+        let poistoid = Controller.leimausCount;
+        poistoButton.id = `leimaus_${poistoid}`;
+        console.log(`leimaus_${Controller.leimausCount}`);
+        poistoButton.addEventListener("click", function () {
+            Controller.removeLeimaus(row)
+        }, false);
+        poistoCell.appendChild(poistoButton);
         row.appendChild(selectCell);
         row.appendChild(aikaCell);
         row.appendChild(rastiCell);
         row.appendChild(poistoCell);
+        Controller.leimausCount += 1;
         return row;
     }
 }
@@ -704,7 +746,7 @@ class util {
      * @param property - Value to sort from
      */
     static sortArrayProperty(arr, property) {
-        arr.sort(function(a, b) {
+        arr.sort(function (a, b) {
             let itemA = a[property].toUpperCase(); // ignore upper and lowercase
             let itemB = b[property].toUpperCase(); // ignore upper and lowercase
             if (itemA < itemB) return -1;
@@ -778,6 +820,7 @@ class util {
                 }
             }
         }
+        Controller.setSort(col);
     }
 
     /**
@@ -869,7 +912,7 @@ class util {
      */
     static getKoodit(rastiArr) {
         return this.getRastit()
-            .filter(function(e) {
+            .filter(function (e) {
                 return rastiArr.indexOf(e.id.toString()) > -1;
             })
             .map(x => x.koodi);
@@ -920,7 +963,7 @@ class util {
      */
     static parseArrayToInt(arr) {
         return arr
-            .filter(function(x) {
+            .filter(function (x) {
                 return /^\d/.test(x);
             })
             .map(x => parseInt(x));
@@ -937,7 +980,7 @@ class util {
      */
     static getAika(team) {
         let aikaString = "00:00:00";
-        const kaydytRastit = this.getKaydytRastit(team).filter(function(rasti) {
+        const kaydytRastit = this.getKaydytRastit(team).filter(function (rasti) {
             return rasti.aika !== "";
         });
         const ekaRasti = kaydytRastit.shift();
@@ -972,7 +1015,7 @@ class util {
      */
     static getMatka(team) {
         let matka = 0;
-        const kaydytRastit = util.getKaydytRastit(team).filter(function(rasti) {
+        const kaydytRastit = util.getKaydytRastit(team).filter(function (rasti) {
             return rasti.aika !== "";
         });
         for (let i = 0; i < kaydytRastit.length - 1; i++) {
@@ -980,7 +1023,8 @@ class util {
             let rasti2 = util.getMatchingRasti(kaydytRastit[i + 1].rasti);
             try {
                 matka += util.getDistanceFromLatLonInKm(rasti1.lat, rasti1.lon, rasti2.lat, rasti2.lon);
-            } catch (err) {}
+            } catch (err) {
+            }
         }
         return Math.floor(matka);
     }
@@ -1077,13 +1121,16 @@ class util {
         return wrapper.appendChild(toWrap);
     }
 
-    static ISODateString(d){
-        function pad(n){return n<10 ? '0'+n : n}
-        return d.getUTCFullYear()+'-'
-            + pad(d.getUTCMonth()+1)+'-'
-            + pad(d.getUTCDate())+' '
-            + pad(d.getUTCHours())+':'
-            + pad(d.getUTCMinutes())+':'
+    static ISODateString(d) {
+        function pad(n) {
+            return n < 10 ? '0' + n : n
+        }
+
+        return d.getUTCFullYear() + '-'
+            + pad(d.getUTCMonth() + 1) + '-'
+            + pad(d.getUTCDate()) + ' '
+            + pad(d.getUTCHours()) + ':'
+            + pad(d.getUTCMinutes()) + ':'
             + pad(d.getUTCSeconds())
     }
 
@@ -1127,6 +1174,6 @@ class LOGGER {
 /**
  * Runs when everything has loaded
  */
-window.onload = function() {
+window.onload = function () {
     TulosPalvelu.main();
 };
