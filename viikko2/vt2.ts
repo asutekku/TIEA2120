@@ -3,6 +3,8 @@
 const printDebug = false;
 let editModeOn = false;
 
+let tulosPalveluData = data;
+
 /**
  * Main class
  */
@@ -29,7 +31,7 @@ class TulosPalvelu {
         document.getElementById("tupa").setAttribute("class", "card");
         document.body.appendChild(rasti_container);
         document.body.appendChild(joukkue_container);
-        create.table(util.getJoukkueet(data));
+        create.table(util.getJoukkueet(tulosPalveluData));
         create.form("rasti", "Uusi rasti");
         create.form("joukkue", "Uusi joukkue");
         create.createEditButtons();
@@ -52,6 +54,8 @@ class TulosPalvelu {
         document.head.appendChild(link);
         joukkue_container.appendChild(rastiLeimaukset);
         create.rastiLeimaukset();
+        util.sortTable(document.getElementById("tulosTable"), 0);
+        util.sortTable(document.getElementById("tulosTable"), 0);
     }
 }
 
@@ -119,12 +123,12 @@ class Controller {
         return document.getElementById("form_lisaaJoukkue").getElementsByTagName("input");
     }
 
-    static jasenRows() {
+    static jasenRows(): NodeListOf<Element> {
         return document.getElementById("jasenet_fieldset").getElementsByClassName("formRow");
     }
 
     static removeExtraJasenInputs(): void {
-        let rows = Controller.jasenRows();
+        let rows: NodeListOf<Element> = Controller.jasenRows();
         if (rows.length > 2)
             for (let i = rows.length - 1; i >= 2; i--) {
                 util.removeElementByNode(rows[i]);
@@ -137,7 +141,7 @@ class Controller {
      */
     static newRasti(e) {
         if (e.preventDefault) e.preventDefault();
-        let form: HTMLFormElement = util.getByID("form_lisaaRasti");
+        let form: HTMLElement = util.getByID("form_lisaaRasti");
         let formData: FormData = new FormData(form);
         let rasti: Object = {};
         let skip = false;
@@ -152,14 +156,14 @@ class Controller {
         }
         if (!skip) {
             rasti.id = util.randomInt(16);
-            data.rastit.push(rasti);
+            tulosPalveluData.rastit.push(rasti);
             form.reset();
         }
-        console.log(data.rastit);
+        console.log(tulosPalveluData.rastit);
     }
 
     /**
-     * Saves the team to data
+     * Saves the team to tulosPalveluData
      * @param e - Event to prevent button doing something evil
      */
     static saveJoukkue(e) {
@@ -168,11 +172,11 @@ class Controller {
         let formData = new FormData(form);
         let values = Controller.joukkueFormInputs();
         if (editModeOn) {
-            Controller.editedJoukkue = util.getJoukkueet(data)[Controller.teamIndex];
+            Controller.editedJoukkue = util.getJoukkueet(tulosPalveluData)[Controller.teamIndex];
             console.log(Controller.editedJoukkue);
             Controller.editedJoukkue.nimi = Controller.joukkueFormInputs()[0].value;
             Controller.editedJoukkue.jasenet = [];
-            Controller.editedJoukkue.id = util.getJoukkueet(data)[Controller.teamIndex].id;
+            Controller.editedJoukkue.id = util.getJoukkueet(tulosPalveluData)[Controller.teamIndex].id;
             util.updateJoukkue(Controller.editedJoukkue);
             for (let input of document.getElementById("jasenet_fieldset").getElementsByTagName("input")) {
                 LOGGER.debug(`Adding a new member: ${input.value}`);
@@ -204,16 +208,15 @@ class Controller {
     }
 
     static appendJoukkueRow(joukkue): void {
-        data.sarjat[1].joukkueet.push(joukkue);
+        tulosPalveluData.sarjat[1].joukkueet.push(joukkue);
         util.getByID("tulosTable").appendChild(create.teamRow(joukkue));
         let sort = Controller.currentSort;
         const sortedTable = document.getElementById("tulosTable");
+        let initialSort = Controller.currentSort;
         for (let i = 0; i < 5; i++) {
-            for (let f = 0; f < 5; f++) {
-                if (sort[f] == i) {
-                    util.sortTable(sortedTable, f);
-                    util.sortTable(sortedTable, f);
-                }
+            if (Controller.currentSort[i] == 4) {
+                console.log(`Sorting column ${i}`);
+                util.sortTable(sortedTable, i);
             }
         }
     }
@@ -252,13 +255,13 @@ class Controller {
     }
 
     /**
-     * Updates team data
+     * Updates team tulosPalveluData
      * @param team - Team to update
-     * @param form - Resets the form where the data is coming from
+     * @param form - Resets the form where the tulosPalveluData is coming from
      */
     static updateJoukkueTable(team, form): void {
-        util.getJoukkueet(data)[Controller.teamIndex] = team;
-        let joukkueet = util.getJoukkueet(data);
+        util.getJoukkueet(tulosPalveluData)[Controller.teamIndex] = team;
+        let joukkueet = util.getJoukkueet(tulosPalveluData);
         let parentRow;
         for (let i = 0; i < joukkueet.length; i++) {
             if (joukkueet[i].id === team.id) {
@@ -282,7 +285,7 @@ class Controller {
 
     static updateJoukkueStats() {
         let joukkue = Controller.editedJoukkue;
-        let joukkueet = util.getJoukkueet(data);
+        let joukkueet = util.getJoukkueet(tulosPalveluData);
         let parentRow;
         for (let i = 0; i < joukkueet.length; i++) {
             if (joukkueet[i].id === joukkue.id) {
@@ -325,7 +328,7 @@ class Controller {
             document.getElementsByTagName("legend")[0].textContent = "Muokkaa joukkuetta";
             editModeOn = true;
             create.toggleEditButtons();
-            let joukkueet = util.getJoukkueet(data);
+            let joukkueet = util.getJoukkueet(tulosPalveluData);
             for (let i = 0; i < joukkueet.length; i++) {
                 if (joukkueet[i].id.toString() === teamID) {
                     Controller.teamIndex = i;
@@ -364,9 +367,9 @@ class Controller {
     static removeLeimaukset() {
         for (let leimaus of Controller.arrayOfLeimaukset) {
             let leimausID = leimaus.parentNode.parentNode.getElementsByTagName("td")[2].textContent;
-            for (let i = 0; i < data.tupa.length; i++) {
-                if (data.tupa[i].joukkue == Controller.editedJoukkue.id && data.tupa[i].rasti == leimausID) {
-                    data.tupa.splice(i, 1);
+            for (let i = 0; i < tulosPalveluData.tupa.length; i++) {
+                if (tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id && tulosPalveluData.tupa[i].rasti == leimausID) {
+                    tulosPalveluData.tupa.splice(i, 1);
                 }
             }
             util.removeElementByNode(leimaus.parentNode.parentNode);
@@ -392,9 +395,9 @@ class Controller {
         if (Controller.editedCellType == "aika") {
             cell.textContent = Controller.editedCellContent;
             if (cellValue.match(aikaRegWhole)) {
-                for (let i = 0; i < data.tupa.length; i++) {
-                    if (data.tupa[i].joukkue == Controller.editedJoukkue.id && data.tupa[i].rasti == rastiID) {
-                        data.tupa[i].aika = cellValue;
+                for (let i = 0; i < tulosPalveluData.tupa.length; i++) {
+                    if (tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id && tulosPalveluData.tupa[i].rasti == rastiID) {
+                        tulosPalveluData.tupa[i].aika = cellValue;
                         cell.textContent = cellValue;
                     }
                 }
@@ -402,9 +405,9 @@ class Controller {
         } else {
             cell.textContent = Controller.editedCellContent;
             if (cellValue.match(rastiRegex)) {
-                for (let i = 0; i < data.tupa.length; i++) {
-                    if (data.tupa[i].joukkue == Controller.editedJoukkue.id && data.tupa[i].rasti == parseInt(cell.textContent)) {
-                        data.tupa[i].rasti = cellValue;
+                for (let i = 0; i < tulosPalveluData.tupa.length; i++) {
+                    if (tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id && tulosPalveluData.tupa[i].rasti == parseInt(cell.textContent)) {
+                        tulosPalveluData.tupa[i].rasti = cellValue;
                         cell.textContent = cellValue;
                     }
                 }
@@ -415,9 +418,9 @@ class Controller {
 
     static removeLeimaus(row) {
         let leimausID = row.getElementsByTagName("td")[2].textContent;
-        for (let i = 0; i < data.tupa.length; i++) {
-            if (data.tupa[i].joukkue == Controller.editedJoukkue.id && data.tupa[i].rasti == leimausID) {
-                data.tupa.splice(i, 1);
+        for (let i = 0; i < tulosPalveluData.tupa.length; i++) {
+            if (tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id && tulosPalveluData.tupa[i].rasti == leimausID) {
+                tulosPalveluData.tupa.splice(i, 1);
             }
         }
         util.removeElementByNode(row);
@@ -736,7 +739,7 @@ class create {
         let rastinum = util.randomInt(16);
         const leimausRow = create.leimausRow(aikaString, rastinum.toString(), index);
         document.getElementById("leimausTable").appendChild(leimausRow);
-        data.tupa.push({aika: aikaString, rasti: rastinum, joukkue: Controller.editedJoukkue.id});
+        tulosPalveluData.tupa.push({aika: aikaString, rasti: rastinum, joukkue: Controller.editedJoukkue.id});
         Controller.updateJoukkueStats();
     }
 
@@ -811,7 +814,6 @@ class util {
 
     static sortWithSeries(table, col) {
         this.sortTable(table, col);
-        this.sortTable(table, 0);
     }
 
     /**
@@ -821,6 +823,12 @@ class util {
      * @param col - Column to sort by
      */
     static sortTable(ediTable, col) {
+        let header = ediTable.getElementsByTagName("th")[col];
+        for (let item of ediTable.getElementsByTagName("th")) {
+            if (item.textContent[item.textContent.length - 1] == "↑" || item.textContent[item.textContent.length - 1] == "↓") {
+                item.textContent = item.textContent.substring(0, item.textContent.length - 2);
+            }
+        }
         let rows,
             i,
             x,
@@ -874,24 +882,39 @@ class util {
                 }
             }
         }
+        if (dir == "asc") {
+            if (header.textContent[header.textContent.length - 1] == "↑" || header.textContent[header.textContent.length - 1] == "↓") {
+                header.textContent = header.textContent.substring(0, header.textContent.length - 1);
+                header.textContent = header.textContent + " ↑";
+            } else {
+                header.textContent = header.textContent + " ↑";
+            }
+        } else if (dir == "desc") {
+            if (header.textContent[header.textContent.length - 1] == "↑" || header.textContent[header.textContent.length - 1] == "↓") {
+                header.textContent = header.textContent.substring(0, header.textContent.length - 1);
+                header.textContent = header.textContent + " ↓";
+            } else {
+                header.textContent = header.textContent + " ↓";
+            }
+        }
         Controller.setSort(col);
     }
 
     /**
      * Returns the joukkueet in a nice array
-     * @param data-  The json object
+     * @param tulosPalveluData-  The json object
      * @returns {Joukkue[]} - Returns the joukkeet as Joukkue array
      */
-    static getJoukkueet(data) {
+    static getJoukkueet(tulosPalveluData) {
         let arr: Joukkue[] = [];
-        for (let i = 0; i < data.sarjat.length; i++) {
-            for (let j = 0; j < data.sarjat[i].joukkueet.length; j++) {
+        for (let i = 0; i < tulosPalveluData.sarjat.length; i++) {
+            for (let j = 0; j < tulosPalveluData.sarjat[i].joukkueet.length; j++) {
                 let joukkue = new Joukkue(
-                    data.sarjat[i].joukkueet[j].nimi,
-                    data.sarjat[i].joukkueet[j].last,
-                    data.sarjat[i].joukkueet[j].jasenet,
-                    data.sarjat[i].joukkueet[j].id,
-                    data.sarjat[i].nimi,
+                    tulosPalveluData.sarjat[i].joukkueet[j].nimi,
+                    tulosPalveluData.sarjat[i].joukkueet[j].last,
+                    tulosPalveluData.sarjat[i].joukkueet[j].jasenet,
+                    tulosPalveluData.sarjat[i].joukkueet[j].id,
+                    tulosPalveluData.sarjat[i].nimi,
                     0
                 );
                 joukkue.pisteet = this.getPoints(joukkue);
@@ -902,7 +925,7 @@ class util {
     }
 
     static updateJoukkue(joukkue) {
-        for (let sarja of data.sarjat) {
+        for (let sarja of tulosPalveluData.sarjat) {
             for (let team of sarja.joukkueet) {
                 if (team.id === joukkue.id) {
                     team.nimi = joukkue.nimi;
@@ -929,7 +952,7 @@ class util {
      * @returns {any} - Array of rastit
      */
     static getRastit() {
-        return data.rastit.map(x => x);
+        return tulosPalveluData.rastit.map(x => x);
     }
 
     /**
@@ -947,7 +970,7 @@ class util {
      * @returns {any} - Rasti ID array
      */
     static getKaydytRastitID(team) {
-        return data.tupa.filter(p => p.joukkue === team.id).map(x => x.rasti);
+        return tulosPalveluData.tupa.filter(p => p.joukkue === team.id).map(x => x.rasti);
     }
 
     /**
@@ -956,7 +979,7 @@ class util {
      * @returns {any} - Rasti array
      */
     static getKaydytRastit(team) {
-        return data.tupa.filter(p => p.joukkue === team.id);
+        return tulosPalveluData.tupa.filter(p => p.joukkue === team.id);
     }
 
     /**
@@ -1209,7 +1232,7 @@ class util {
         }
     }
 
-    static removeElementByNode(node: HTMLElement) {
+    static removeElementByNode(node: Element) {
         try {
             if (node.parentNode) {
                 LOGGER.debug(`Removing node: ${node}`);
