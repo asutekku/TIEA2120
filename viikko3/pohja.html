@@ -1,18 +1,113 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <script type="text/javascript" src="http://appro.mit.jyu.fi/tiea2120/vt/vt3/data.js"></script>
-        <script type="text/javascript" src="vt3.js"></script>
-        <link rel="StyleSheet" href="tyylit.css" type="text/css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta charset="utf-8"/>
-        <title>Tulospalvelu</title>
-    </head>
-    <body>
+<head>
+    <link rel="stylesheet" type="text/css" href="viikko2/tyylit.css"/>
+    <link rel="stylesheet" type="text/css" href="viikko3/tyylit.css"/>
+    <script type="text/javascript" src="http://appro.mit.jyu.fi/tiea2120/vt/vt3/data.js"></script>
+    <script type="text/javascript" src="vt3.js"></script>
+    <link rel="StyleSheet" href="tyylit.css" type="text/css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8"/>
+    <title>Tulospalvelu</title>
+</head>
+<body>
 
-        <!-- Tämän tiedoston sisältöä saa muuttaa vapaasti tästä kommentista eteenpäin ! -->
-        <h1>Tulospalvelu</h1>
+<!-- Tämän tiedoston sisältöä saa muuttaa vapaasti tästä kommentista eteenpäin ! -->
+<h1>Lisää joukkue</h1>
+<form id="form_addTeam">
+    <fieldset>
+        <legend>Joukkueen tiedot</legend>
+        <div class="form_row">
+            <label for="name" class="form_label">
+                <span>Nimi</span>
+            </label>
+            <input type="text" id="name" name="teamName" class="textField">
+        </div>
+        <div class="form_row">
+            <label for="creationDate" class="form_label">
+                <span>Luontiaika</span>
+            </label>
+            <input type="datetime-local" id="creationDate" name="creationDate" max="2018-01-31T01:00:00"
+                   class="textField">
+        </div>
+        <div class="form_row">
+            <label for="punchSystem" class="form_label">
+                <span>Leimaustapa</span>
+            </label>
+            <div id="punchSystem" class="form_innerDiv">
+                <div class="form_row form_row_inner">
+                    <input type="checkbox" name="punchType" value="GPS" id="punch_GPS" class="form_checkbox">
+                    <label for="punch_GPS" class="form_innerLabel form_label"><span>GPS</span></label>
+                </div>
+                <div class="form_row form_row_inner">
+                    <input type="checkbox" name="punchType" value="NFC" id="punch_NFC" class="form_checkbox">
+                    <label for="punch_NFC" class="form_innerLabel form_label"><span>NFC</span></label>
+                </div>
+                <div class="form_row form_row_inner">
+                    <input type="checkbox" name="punchType" value="QR" id="punch_QR" class="form_checkbox">
+                    <label for="punch_QR" class="form_innerLabel form_label"><span>QR</span></label>
+                </div>
+                <div class="form_row form_row_inner">
+                    <input type="checkbox" name="punchType" value="Lomake" id="punch_Lomake" class="form_checkbox">
+                    <label for="punch_Lomake" class="form_innerLabel form_label"><span>Lomake</span></label>
+                </div>
+            </div>
+        </div>
+        <div class="form_row">
+            <label for="series" class="form_label">
+                <span>Sarja</span>
+            </label>
+            <div id="series" class="form_innerDiv">
+                <div class="form_row form_row_inner">
+                    <input type="radio" name="punchType" value="GPS" id="series_2h">
+                    <label for="series_2h" class="form_innerLabel form_label"><span>2h</span></label>
+                </div>
+                <div class="form_row form_row_inner">
+                    <input type="radio" name="punchType" value="NFC" id="series_4h">
+                    <label for="series_4h" class="form_innerLabel form_label"><span>4h</span></label>
+                </div>
+                <div class="form_row form_row_inner">
+                    <input type="radio" name="punchType" value="QR" id="series_8h">
+                    <label for="series_8h" class="form_innerLabel form_label"><span>8h</span></label>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend>Jäsenet</legend>
+        <div class="form_row">
+            <label for="jasen_input_1" class="form_label">
+                <span>Jäsen 1</span>
+            </label>
+            <input type="text" id="jasen_input_1" name="teamName" class="textField">
+        </div>
+        <div class="form_row">
+            <label for="jasen_input_2" class="form_label">
+                <span>Jäsen 2</span>
+            </label>
+            <input type="text" id="jasen_input_2" name="teamName" class="textField">
+        </div>
+        <div class="form_row">
+            <label for="jasen_input_3" class="form_label">
+                <span>Jäsen 3</span>
+            </label>
+            <input type="text" id="jasen_input_3" name="teamName" class="textField">
+        </div>
+        <div class="form_row">
+            <label for="jasen_input_4" class="form_label">
+                <span>Jäsen 4</span>
+            </label>
+            <input type="text" id="jasen_input_4" name="teamName" class="textField">
+        </div>
+        <div class="form_row">
+            <label for="jasen_input_5" class="form_label">
+                <span>Jäsen 5</span>
+            </label>
+            <input type="text" id="jasen_input_5" name="teamName" class="textField">
+        </div>
+    </fieldset>
+    <input type="button" value="Tallenna">
+</form>
 
-
-    </body>
+</body>
 </html>

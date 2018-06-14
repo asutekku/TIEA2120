@@ -1,0 +1,50 @@
+@media screen
+and (min-device-width: 300px)
+and (max-device-width: 1920px)
+and (-webkit-min-device-pixel-ratio: 1) {
+}
+
+#form_addTeam {
+    width: auto;
+}
+
+input {
+    float:right;
+}
+
+.form_innerDiv{
+    float:right;
+    max-width: 400px;
+}
+
+.form_innerLabel{
+    float:right;
+}
+
+.form_row {
+    float:left;
+    width:100%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+.form_row_inner {
+    float:left;
+    width:auto!important;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.form_row_inner {
+}
+
+.textField {
+    width:auto;
+}
+
+.form_label {
+    float:left;
+}
+
+.form_innerLabel {
+    float:right!important;
+}
