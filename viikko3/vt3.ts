@@ -78,6 +78,7 @@ class UI {
     static getTeamList(): DocumentFragment {
         const frag = document.createDocumentFragment();
         const list = document.createElement("ul");
+        list.id = "teamList";
         joukkueet.map(e=>e.nimi).sort().forEach(e=>{
             const li = document.createElement("li");
             li.textContent = e;
@@ -111,6 +112,8 @@ class Validate {
             console.log(newTeam);
             joukkueet.push(newTeam);
             applicationForm.reset();
+            Util.removeElement("teamList"); //:^)
+            document.getElementById("teamListContainer").appendChild(UI.getTeamList());
             return true;
         }
         return false;
