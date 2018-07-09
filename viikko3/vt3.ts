@@ -49,7 +49,7 @@ class UI {
     static errorMsgExists = false;
 
     static initHandlers(): void {
-        const teamInput:HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
+        const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
         const errorDiv: HTMLElement = document.getElementById("teamNameError");
         const nimiRow = document.getElementById("nimiRow");
         applicationForm.addEventListener("submit", Validate.teamInput);
@@ -61,25 +61,42 @@ class UI {
             }
         };
         teamInput.addEventListener("input", () => {
-            if (teamInput.value.trim() ===''){
+            if (teamInput.value.trim() === '') {
                 teamInput.setCustomValidity("Syötä nimi joukkueelle");
             } else {
                 teamInput.setCustomValidity('');
             }
-        },false);
+        }, false);
 
         teamInput.addEventListener('invalid', function () {
             if (!Validate.teamUnique(teamInput.value)) {
                 this.setCustomValidity(`"${teamInput.value}" on jo käytössä, valitse toinen nimi!`);
             }
         }, false);
+        UI.setJasenHandlers();
+    }
+
+    static setJasenHandlers(): void {
+        let jasenFields: HTMLInputElement[] = Array.from(applicationForm.querySelectorAll("input.jasenField"));
+        jasenFields.forEach(field => {
+            field.required = true;
+            field.setCustomValidity("Syötä vähintään kaksi jäsentä");
+            field.onblur = () => {
+                if (Validate.getJasenet().length >= 2) {
+                    jasenFields.forEach(e => {
+                        e.setCustomValidity('');
+                        e.required = false;
+                    })
+                }
+            }
+        })
     }
 
     static getTeamList(): DocumentFragment {
         const frag = document.createDocumentFragment();
         const list = document.createElement("ul");
         list.id = "teamList";
-        joukkueet.map(e=>e.nimi).sort().forEach(e=>{
+        joukkueet.map(e => e.nimi).sort().forEach(e => {
             const li = document.createElement("li");
             li.textContent = e;
             list.appendChild(li);
@@ -92,10 +109,9 @@ class UI {
 class Validate {
     static teamInput(e): boolean {
         if (e.preventDefault) e.preventDefault();
-        const teamInput:HTMLInputElement = applicationForm.querySelector("input[name=teamName]"),
+        const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]"),
             teamName: string = (teamInput as HTMLInputElement).value,
-            formValid: boolean = Validate.teamUnique(teamName);
-
+            formValid: boolean = Validate.teamUnique(teamName) && Validate.getJasenet().length >= 2;
         if (formValid) {
             const newTeam = new Joukkue(
                 teamName,
