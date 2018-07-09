@@ -150,7 +150,7 @@ class Controller {
             if (pair[1] === "") skip = true;
             if (pair[1] === "rand") {
                 rasti[pair[0].substring(0, 3)] = util.getRandomPoint().toString();
-            } else if (pair[0] !== "koodi"){
+            } else if (pair[0] !== "koodi") {
                 rasti[pair[0].substring(0, 3)] = pair[1].toString();
             } else {
                 rasti[pair[0]] = pair[1].toString();
@@ -188,7 +188,7 @@ class Controller {
             create.toggleEditButtons();
         } else if (!Controller.formEmpty(form)) {
             let joukkue: Joukkue = new Joukkue(values[0].value, "00:00:00", [], util.randomInt(16), "2h", 0);
-            formData.forEach(function (value, key) {
+            formData.forEach(function(value, key) {
                 if (key.startsWith("jäsen")) {
                     joukkue.jasenet.push(value);
                 } else {
@@ -248,10 +248,10 @@ class Controller {
      * @param object - Object to set the validation to
      */
     static setValidations(object) {
-        object.onfocusout = function () {
+        object.onfocusout = function() {
             Controller.validateForm("form_lisaaJoukkue", "joukkueButton");
         };
-        object.oninput = function () {
+        object.oninput = function() {
             Controller.validateForm("form_lisaaJoukkue", "joukkueButton");
         };
     }
@@ -341,7 +341,15 @@ class Controller {
             this.joukkueFormInputs()[0].value = Controller.editedJoukkue.nimi;
             for (let i = 0; i < Controller.editedJoukkue.jasenet.length; i++) {
                 if (i > 1) {
-                    create.formRow(util.getByID("jasenet_fieldset"), `Jäsen ${i + 1}`, false, true, util.getByID("p_jasenButton"), true, i.toString());
+                    create.formRow(
+                        util.getByID("jasenet_fieldset"),
+                        `Jäsen ${i + 1}`,
+                        false,
+                        true,
+                        util.getByID("p_jasenButton"),
+                        true,
+                        i.toString()
+                    );
                     fields[i].value = Controller.editedJoukkue.jasenet[i].toString();
                 } else {
                     fields[i].value = Controller.editedJoukkue.jasenet[i].toString();
@@ -370,7 +378,10 @@ class Controller {
         for (let leimaus of Controller.arrayOfLeimaukset) {
             let leimausID = leimaus.parentNode.parentNode.getElementsByTagName("td")[2].textContent;
             for (let i = 0; i < tulosPalveluData.tupa.length; i++) {
-                if (tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id && tulosPalveluData.tupa[i].rasti == leimausID) {
+                if (
+                    tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id &&
+                    tulosPalveluData.tupa[i].rasti == leimausID
+                ) {
                     tulosPalveluData.tupa.splice(i, 1);
                 }
             }
@@ -393,12 +404,15 @@ class Controller {
         const cellValue = cell.textContent;
         const rastiRegex = /^([0-9]{16})/;
         const aikaRegWhole = /^([0-9]{4})-([0-9]{2})-([0-9]{2})\s([0-9]{2}):([0-9]{2}):([0-9]{2})/;
-        const rastiID = cell.parentNode.getElementsByTagName("td")[2].textContent
+        const rastiID = cell.parentNode.getElementsByTagName("td")[2].textContent;
         if (Controller.editedCellType == "aika") {
             cell.textContent = Controller.editedCellContent;
             if (cellValue.match(aikaRegWhole)) {
                 for (let i = 0; i < tulosPalveluData.tupa.length; i++) {
-                    if (tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id && tulosPalveluData.tupa[i].rasti == rastiID) {
+                    if (
+                        tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id &&
+                        tulosPalveluData.tupa[i].rasti == rastiID
+                    ) {
                         tulosPalveluData.tupa[i].aika = cellValue;
                         cell.textContent = cellValue;
                     }
@@ -408,7 +422,10 @@ class Controller {
             cell.textContent = Controller.editedCellContent;
             if (cellValue.match(rastiRegex)) {
                 for (let i = 0; i < tulosPalveluData.tupa.length; i++) {
-                    if (tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id && tulosPalveluData.tupa[i].rasti == parseInt(cell.textContent)) {
+                    if (
+                        tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id &&
+                        tulosPalveluData.tupa[i].rasti == parseInt(cell.textContent)
+                    ) {
                         tulosPalveluData.tupa[i].rasti = cellValue;
                         cell.textContent = cellValue;
                     }
@@ -421,7 +438,10 @@ class Controller {
     static removeLeimaus(row) {
         let leimausID = row.getElementsByTagName("td")[2].textContent;
         for (let i = 0; i < tulosPalveluData.tupa.length; i++) {
-            if (tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id && tulosPalveluData.tupa[i].rasti == leimausID) {
+            if (
+                tulosPalveluData.tupa[i].joukkue == Controller.editedJoukkue.id &&
+                tulosPalveluData.tupa[i].rasti == leimausID
+            ) {
                 tulosPalveluData.tupa.splice(i, 1);
             }
         }
@@ -434,7 +454,7 @@ class Controller {
      * @param {number} index
      */
     static setSort(index: number): void {
-        Controller.currentSort = Controller.currentSort.map(x => x == 0 ? 0 : x - 1);
+        Controller.currentSort = Controller.currentSort.map(x => (x == 0 ? 0 : x - 1));
         Controller.currentSort[index] = 4;
         console.log(Controller.currentSort);
     }
@@ -452,7 +472,7 @@ class create {
         create.submitFormButton(util.getByTag("fieldset")[1], "editButton", "Tallenna", true);
         util.getByID("editButton").addEventListener("click", Controller.saveJoukkue);
         create.submitFormButton(util.getByTag("fieldset")[1], "cancelButton", "Peruuta", true);
-        util.getByID("cancelButton").onclick = function () {
+        util.getByID("cancelButton").onclick = function() {
             Controller.removeExtraJasenInputs();
             let form: HTMLFormElement = util.getByID("form_lisaaJoukkue");
             document.getElementsByTagName("legend")[0].textContent = "Uusi joukkue";
@@ -566,7 +586,16 @@ class create {
      * @param {boolean} validate - Does the function validate when exited
      * @param id
      */
-    static formRow(appendable, inputLabel: string, required?, before?: boolean, beforeElement?, validate?, id?: string, addText?: string) {
+    static formRow(
+        appendable,
+        inputLabel: string,
+        required?,
+        before?: boolean,
+        beforeElement?,
+        validate?,
+        id?: string,
+        addText?: string
+    ) {
         let row = this.element("p");
         row.setAttribute("class", "formRow");
         row.appendChild(this.input(inputLabel, required, validate, addText));
@@ -670,7 +699,7 @@ class create {
         let teamEl = document.createElement("td");
         let teamAh = create.element("a", team.nimi);
         let pointsEl = create.element("td", team.pisteet);
-        let aika = create.element("td", (team.aika == undefined ? "00:00:00" : team.aika));
+        let aika = create.element("td", team.aika == undefined ? "00:00:00" : team.aika);
         let matka = create.element("td", team.matka + " km");
         teamAh.href = `javascript:Controller.editJoukkue("${team.id.toString()}")`;
         teamAh.id = team.id;
@@ -706,7 +735,12 @@ class create {
         leimausTable.appendChild(headerRow);
         leimaustableContainer.appendChild(leimausTable);
         document.getElementById("rastileimaukset").appendChild(leimaustableContainer);
-        create.submitFormButton(document.getElementById("rastileimaukset"), "removeLeimausButton", "Poista valitut", true);
+        create.submitFormButton(
+            document.getElementById("rastileimaukset"),
+            "removeLeimausButton",
+            "Poista valitut",
+            true
+        );
         create.submitFormButton(document.getElementById("rastileimaukset"), "addLeimausButton", "Lisää leimaus", true);
         document.getElementById("removeLeimausButton").disabled = true;
         document.getElementById("removeLeimausButton").addEventListener("click", Controller.removeLeimaukset, false);
@@ -741,7 +775,11 @@ class create {
         let rastinum = util.randomInt(16);
         const leimausRow = create.leimausRow(aikaString, rastinum.toString(), index);
         document.getElementById("leimausTable").appendChild(leimausRow);
-        tulosPalveluData.tupa.push({aika: aikaString, rasti: rastinum, joukkue: Controller.editedJoukkue.id});
+        tulosPalveluData.tupa.push({
+            aika: aikaString,
+            rasti: rastinum,
+            joukkue: Controller.editedJoukkue.id
+        });
         Controller.updateJoukkueStats();
     }
 
@@ -761,28 +799,48 @@ class create {
         selectCell.appendChild(selectCheckBoxLabel);
         let aikaCell = create.element("td", aika);
         aikaCell.contentEditable = "true";
-        aikaCell.addEventListener('focusout', function (e) {
-            Controller.validateRastiField(aikaCell)
-        }, true);
-        aikaCell.addEventListener('focus', function (e) {
-            Controller.setValidateRastiField(aikaCell)
-        }, true);
+        aikaCell.addEventListener(
+            "focusout",
+            function(e) {
+                Controller.validateRastiField(aikaCell);
+            },
+            true
+        );
+        aikaCell.addEventListener(
+            "focus",
+            function(e) {
+                Controller.setValidateRastiField(aikaCell);
+            },
+            true
+        );
         let rastiCell = create.element("td", rasti);
         rastiCell.contentEditable = "true";
-        rastiCell.addEventListener('focusout', function (e) {
-            Controller.validateRastiField(rastiCell)
-        }, true);
-        rastiCell.addEventListener('focus', function (e) {
-            Controller.setValidateRastiField(rastiCell)
-        }, true);
+        rastiCell.addEventListener(
+            "focusout",
+            function(e) {
+                Controller.validateRastiField(rastiCell);
+            },
+            true
+        );
+        rastiCell.addEventListener(
+            "focus",
+            function(e) {
+                Controller.setValidateRastiField(rastiCell);
+            },
+            true
+        );
         let poistoCell = create.element("td");
         let poistoButton = create.element("span", "×");
         poistoButton.setAttribute("class", "removeButton");
         let poistoid = Controller.leimausCount;
         poistoButton.id = `leimaus_${poistoid}`;
-        poistoButton.addEventListener("click", function () {
-            Controller.removeLeimaus(row)
-        }, false);
+        poistoButton.addEventListener(
+            "click",
+            function() {
+                Controller.removeLeimaus(row);
+            },
+            false
+        );
         poistoCell.appendChild(poistoButton);
         row.appendChild(selectCell);
         row.appendChild(aikaCell);
@@ -805,7 +863,7 @@ class util {
      * @param property - Value to sort from
      */
     static sortArrayProperty(arr, property) {
-        arr.sort(function (a, b) {
+        arr.sort(function(a, b) {
             let itemA = a[property].toUpperCase(); // ignore upper and lowercase
             let itemB = b[property].toUpperCase(); // ignore upper and lowercase
             if (itemA < itemB) return -1;
@@ -827,7 +885,10 @@ class util {
     static sortTable(ediTable, col) {
         let header = ediTable.getElementsByTagName("th")[col];
         for (let item of ediTable.getElementsByTagName("th")) {
-            if (item.textContent[item.textContent.length - 1] == "↑" || item.textContent[item.textContent.length - 1] == "↓") {
+            if (
+                item.textContent[item.textContent.length - 1] == "↑" ||
+                item.textContent[item.textContent.length - 1] == "↓"
+            ) {
                 item.textContent = item.textContent.substring(0, item.textContent.length - 2);
             }
         }
@@ -885,14 +946,20 @@ class util {
             }
         }
         if (dir == "asc") {
-            if (header.textContent[header.textContent.length - 1] == "↑" || header.textContent[header.textContent.length - 1] == "↓") {
+            if (
+                header.textContent[header.textContent.length - 1] == "↑" ||
+                header.textContent[header.textContent.length - 1] == "↓"
+            ) {
                 header.textContent = header.textContent.substring(0, header.textContent.length - 1);
                 header.textContent = header.textContent + " ↑";
             } else {
                 header.textContent = header.textContent + " ↑";
             }
         } else if (dir == "desc") {
-            if (header.textContent[header.textContent.length - 1] == "↑" || header.textContent[header.textContent.length - 1] == "↓") {
+            if (
+                header.textContent[header.textContent.length - 1] == "↑" ||
+                header.textContent[header.textContent.length - 1] == "↓"
+            ) {
                 header.textContent = header.textContent.substring(0, header.textContent.length - 1);
                 header.textContent = header.textContent + " ↓";
             } else {
@@ -963,7 +1030,9 @@ class util {
      * @returns {number} - Random integer
      */
     static randomInt(length): number {
-        return Math.floor(Math.pow(10, length - 1) + Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1));
+        return Math.floor(
+            Math.pow(10, length - 1) + Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1)
+        );
     }
 
     /**
@@ -991,7 +1060,7 @@ class util {
      */
     static getKoodit(rastiArr) {
         return this.getRastit()
-            .filter(function (e) {
+            .filter(function(e) {
                 return rastiArr.indexOf(e.id.toString()) > -1;
             })
             .map(x => x.koodi);
@@ -1042,7 +1111,7 @@ class util {
      */
     static parseArrayToInt(arr) {
         return arr
-            .filter(function (x) {
+            .filter(function(x) {
                 return /^\d/.test(x);
             })
             .map(x => parseInt(x));
@@ -1059,7 +1128,7 @@ class util {
      */
     static getAika(team) {
         let aikaString = "00:00:00";
-        const kaydytRastit = this.getKaydytRastit(team).filter(function (rasti) {
+        const kaydytRastit = this.getKaydytRastit(team).filter(function(rasti) {
             return rasti.aika !== "";
         });
         const ekaRasti = kaydytRastit.shift();
@@ -1094,7 +1163,7 @@ class util {
      */
     static getMatka(team) {
         let matka = 0;
-        const kaydytRastit = util.getKaydytRastit(team).filter(function (rasti) {
+        const kaydytRastit = util.getKaydytRastit(team).filter(function(rasti) {
             return rasti.aika !== "";
         });
         for (let i = 0; i < kaydytRastit.length - 1; i++) {
@@ -1102,8 +1171,7 @@ class util {
             let rasti2 = util.getMatchingRasti(kaydytRastit[i + 1].rasti);
             try {
                 matka += util.getDistanceFromLatLonInKm(rasti1.lat, rasti1.lon, rasti2.lat, rasti2.lon);
-            } catch (err) {
-            }
+            } catch (err) {}
         }
         return Math.floor(matka);
     }
@@ -1120,7 +1188,9 @@ class util {
         let R = 6371; // Radius of the earth in km
         let dLat = util.deg2rad(lat2 - lat1); // deg2rad below
         let dLon = util.deg2rad(lon2 - lon1);
-        let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(util.deg2rad(lat1)) * Math.cos(util.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        let a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(util.deg2rad(lat1)) * Math.cos(util.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         let d = R * c; // Distance in km
         return d;
@@ -1202,19 +1272,26 @@ class util {
 
     static ISODateString(d) {
         function pad(n) {
-            return n < 10 ? '0' + n : n
+            return n < 10 ? "0" + n : n;
         }
 
-        return d.getUTCFullYear() + '-'
-            + pad(d.getUTCMonth() + 1) + '-'
-            + pad(d.getUTCDate()) + ' '
-            + pad(d.getUTCHours()) + ':'
-            + pad(d.getUTCMinutes()) + ':'
-            + pad(d.getUTCSeconds())
+        return (
+            d.getUTCFullYear() +
+            "-" +
+            pad(d.getUTCMonth() + 1) +
+            "-" +
+            pad(d.getUTCDate()) +
+            " " +
+            pad(d.getUTCHours()) +
+            ":" +
+            pad(d.getUTCMinutes()) +
+            ":" +
+            pad(d.getUTCSeconds())
+        );
     }
 
     static getRandomPoint(): number {
-        return Math.round((Math.random() * 360 - 180) * 1000000) / 1000000
+        return Math.round((Math.random() * 360 - 180) * 1000000) / 1000000;
         // .toFixed() returns string, so ' * 1' is a trick to convert to number
     }
 
@@ -1258,6 +1335,6 @@ class LOGGER {
 /**
  * Runs when everything has loaded
  */
-window.onload = function () {
+window.onload = function() {
     TulosPalvelu.main();
 };
