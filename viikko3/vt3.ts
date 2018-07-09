@@ -18,6 +18,7 @@ class suunnistusApp {
         this.setVariables();
         UI.initHandlers();
         console.log(sarjat);
+        document.getElementById("teamListContainer").appendChild(UI.getTeamList());
     }
 
     static setVariables(): void {
@@ -76,6 +77,13 @@ class UI {
 
     static getTeamList(): DocumentFragment {
         const frag = document.createDocumentFragment();
+        const list = document.createElement("ul");
+        joukkueet.map(e=>e.nimi).sort().forEach(e=>{
+            const li = document.createElement("li");
+            li.textContent = e;
+            list.appendChild(li);
+        });
+        frag.appendChild(list);
         return frag;
     };
 }
@@ -107,7 +115,7 @@ class Validate {
         }
         return false;
     }
-    
+
     static teamUnique(name): boolean {
         return !joukkueet.find(joukkue => joukkue.nimi.toLowerCase() === name.trim().toLowerCase());
     }
