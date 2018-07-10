@@ -73,7 +73,9 @@ class UI {
                 this.setCustomValidity(`"${teamInput.value}" on jo käytössä, valitse toinen nimi!`);
             }
         }, false);
+        document.getElementById("series").appendChild(UI.getSarjaButtons());
         UI.setJasenHandlers();
+        UI.setLeimausHandlers();
     }
 
     static setJasenHandlers(): void {
@@ -87,9 +89,68 @@ class UI {
                         e.setCustomValidity('');
                         e.required = false;
                     })
+                } else {
+                    jasenFields.forEach(e => {
+                        e.setCustomValidity("Syötä vähintään kaksi jäsentä");
+                        e.required = true;
+                    })
                 }
             }
         })
+    }
+
+    static setLeimausHandlers():void {
+        let leimausBoxes: HTMLInputElement[] = Array.from(applicationForm.querySelectorAll("input.form_checkbox_leimaus"));
+        leimausBoxes.forEach(box => {
+            box.required = true;
+            box.setCustomValidity("Valitse vähintään yksi leimaustapa");
+            box.addEventListener('change',()=>{
+                if (Validate.getLeimaustapa().length >= 1) {
+                    if(document.getElementById("boxError")) Util.removeElement("boxError")
+                    leimausBoxes.forEach(e => {
+                        e.setCustomValidity('');
+                        e.required = false;
+                    })
+                } else {
+                    document.getElementById("punchSystem").appendChild(Util.errorMessage("Valitse vähintään yksi leimaustapa","boxError"))
+                    leimausBoxes.forEach(e => {
+                        e.setCustomValidity('Valitse vähintään yksi leimaustapa');
+                        e.required = true;
+                    })
+                }
+            })
+        })
+    }
+
+    static getSarjaButtons(): DocumentFragment {
+        if (document.getElementById("sarjaButtonContainer")) Util.removeElement("sarjaButtonContainer");
+        let frag = document.createDocumentFragment(),
+        container = document.createElement("div"),
+        checked = false;
+        container.id = "sarjaButtonContainer";
+        sarjat.forEach(e=> {
+            const formRow:HTMLDivElement = document.createElement("div"),
+            sarjaRadio:HTMLInputElement = document.createElement("input"),
+            sarjaLabel:HTMLLabelElement = document.createElement("label"),
+            sarjaSpan:HTMLSpanElement = document.createElement("span");
+            formRow.classList.add("form_row","form_row_innder");
+            sarjaRadio.type = "radio";
+            sarjaRadio.name = "sarjaPunch";
+            sarjaRadio.classList.add("sarjaRadio");
+            sarjaRadio.value = e.nimi;
+            sarjaRadio.id = `series_${e.nimi}`;
+            sarjaRadio.checked = true;
+            sarjaLabel.htmlFor = `series_${e.nimi}`;
+            sarjaLabel.classList.add("form_innerLabel","form_label");
+            sarjaSpan.textContent = e.nimi;
+            formRow.appendChild(sarjaRadio);
+            formRow.appendChild(sarjaLabel);
+            sarjaLabel.appendChild(sarjaSpan);
+            container.appendChild(formRow);
+            checked = true;
+        });
+        frag.appendChild(container);
+        return frag;
     }
 
     static getTeamList(): DocumentFragment {
@@ -111,7 +172,10 @@ class Validate {
         if (e.preventDefault) e.preventDefault();
         const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]"),
             teamName: string = (teamInput as HTMLInputElement).value,
-            formValid: boolean = Validate.teamUnique(teamName) && Validate.getJasenet().length >= 2;
+            jasenet = Validate.getJasenet(),
+            leimaustavat = Validate.getLeimaustapa(),
+            sarja = Validate.getSarja(),
+            formValid: boolean = Validate.teamUnique(teamName) && jasenet.length >= 2 && leimaustavat.length >= 1;
         if (formValid) {
             const newTeam = new Joukkue(
                 teamName,
@@ -127,9 +191,13 @@ class Validate {
             );
             console.log(newTeam);
             joukkueet.push(newTeam);
+            dataset.saveJoukkue(newTeam);
             applicationForm.reset();
+            UI.initHandlers();
             Util.removeElement("teamList"); //:^)
             document.getElementById("teamListContainer").appendChild(UI.getTeamList());
+            console.log(data.joukkueet);
+            alert(`Joukkue ${teamName} lisätty onnistuneesti`);
             return true;
         }
         return false;
@@ -146,9 +214,7 @@ class Validate {
     }
 
     static getSarja(): Sarja {
-        const sarjaCode = Array.from(applicationForm.querySelectorAll("input.sarjaRadio")).find(
-            e => (e as HTMLInputElement).checked
-        ).value;
+        const sarjaCode = (Array.from(applicationForm.querySelectorAll("input.sarjaRadio")).find(e => (e as HTMLInputElement).checked) as HTMLInputElement).value;
         return sarjat.find(e => e.nimi === sarjaCode);
     }
 
@@ -156,6 +222,24 @@ class Validate {
         return Array.from(applicationForm.querySelectorAll("input[type=checkbox]"))
             .filter(e => (e as HTMLInputElement).checked)
             .map(e => (e as HTMLInputElement).value);
+    }
+}
+
+class dataset {
+    static saveJoukkue(team:Joukkue):void {
+        const joukkue = {
+            nimi: team.nimi,
+            jasenet: team.jasenet,
+            sarja: team.sarja.id,
+            seura : team.seura,
+            id: team.id,
+            rastit : team.rastit ? team.rastit.map(e=> {e.aika,e.id}) : null,
+            pisteet: team.pisteet,
+            matka: team.matka,
+            leimaustapa: team.leimaustapa,
+            luontiaika: team.luontiaika
+        }
+        data.joukkueet.push(joukkue);
     }
 }
 
@@ -263,7 +347,7 @@ class Util {
         Util.generateID();
     }
 
-    static getDate(date): string {
+    static getDate(date:Date): string {
         function z(n) {
             return (n < 10 ? "0" : "") + n;
         }

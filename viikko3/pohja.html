@@ -13,7 +13,7 @@
 <!-- Tämän tiedoston sisältöä saa muuttaa vapaasti tästä kommentista eteenpäin ! -->
 <div class="container">
     <div class="formContainer mContainer">
-        <h1>Lisää joukkue</h1>
+        <h1 id="mainTitle">Lisää joukkue</h1>
         <form id="suunnistusForm" class="form">
             <fieldset>
                 <legend>Joukkueen tiedot</legend>
@@ -40,20 +40,20 @@
                     </label>
                     <div id="punchSystem" class="form_innerDiv">
                         <div class="form_row form_row_inner">
-                            <input type="checkbox" name="punchType" value="GPS" id="punch_GPS" class="form_checkbox">
+                            <input type="checkbox" name="punchType" value="GPS" id="punch_GPS" class="form_checkbox_leimaus">
                             <label for="punch_GPS" class="form_innerLabel form_label"><span>GPS</span></label>
                         </div>
                         <div class="form_row form_row_inner">
-                            <input type="checkbox" name="punchType" value="NFC" id="punch_NFC" class="form_checkbox">
+                            <input type="checkbox" name="punchType" value="NFC" id="punch_NFC" class="form_checkbox_leimaus">
                             <label for="punch_NFC" class="form_innerLabel form_label"><span>NFC</span></label>
                         </div>
                         <div class="form_row form_row_inner">
-                            <input type="checkbox" name="punchType" value="QR" id="punch_QR" class="form_checkbox">
+                            <input type="checkbox" name="punchType" value="QR" id="punch_QR" class="form_checkbox_leimaus">
                             <label for="punch_QR" class="form_innerLabel form_label"><span>QR</span></label>
                         </div>
                         <div class="form_row form_row_inner">
                             <input type="checkbox" name="punchType" value="Lomake" id="punch_Lomake"
-                                   class="form_checkbox">
+                                   class="form_checkbox_leimaus">
                             <label for="punch_Lomake" class="form_innerLabel form_label"><span>Lomake</span></label>
                         </div>
                     </div>
@@ -63,18 +63,7 @@
                         <span>Sarja</span>
                     </label>
                     <div id="series" class="form_innerDiv">
-                        <div class="form_row form_row_inner">
-                            <input type="radio" name="sarjaPunch" class="sarjaRadio" value="2h" id="series_2h" checked>
-                            <label for="series_2h" class="form_innerLabel form_label"><span>2h</span></label>
-                        </div>
-                        <div class="form_row form_row_inner">
-                            <input type="radio" name="sarjaPunch" class="sarjaRadio" value="4h" id="series_4h">
-                            <label for="series_4h" class="form_innerLabel form_label"><span>4h</span></label>
-                        </div>
-                        <div class="form_row form_row_inner">
-                            <input type="radio" name="sarjaPunch" class="sarjaRadio" value="8h" id="series_8h">
-                            <label for="series_8h" class="form_innerLabel form_label"><span>8h</span></label>
-                        </div>
+                        
                     </div>
                 </div>
             </fieldset>
