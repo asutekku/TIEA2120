@@ -1,142 +1,200 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <script type="text/javascript" src="http://appro.mit.jyu.fi/tiea2120/vt/vt3/data.js"></script>
     <script type="text/javascript" src="build/vt3.js"></script>
-    <link rel="StyleSheet" href="tyylit.css" type="text/css"/>
+    <link rel="StyleSheet" href="tyylit.css" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <title>Tulospalvelu</title>
 </head>
+
 <body>
 
-<!-- Tämän tiedoston sisältöä saa muuttaa vapaasti tästä kommentista eteenpäin ! -->
-<div class="container">
-    <div class="formContainer mContainer">
-        <h1 id="mainTitle">Lisää joukkue</h1>
-        <form id="suunnistusForm" class="form">
-            <fieldset>
-                <legend>Joukkueen tiedot</legend>
-                <div class="form_row" id="nimiRow">
-                    <label for="teamNameInput" class="form_label">
-                        <span>Nimi</span>
-                    </label>
-                    <div class="form_data">
-                        <input type="text" id="teamNameInput" name="teamName" class="textField" required>
-                    </div>
-                </div>
-                <div class="form_row" id="luontiRow">
-                    <label for="creationDate" class="form_label">
-                        <span>Luontiaika</span>
-                    </label>
-                    <div class="form_data">
-                        <input type="datetime-local" id="creationDate" name="creationDate" max="2018-01-01T01:00"
-                               class="textField" required>
-                    </div>
-                </div>
-                <div class="form_row" id="leimausRow">
-                    <label for="punchSystem" class="form_label">
-                        <span>Leimaustapa</span>
-                    </label>
-                    <div id="punchSystem" class="form_innerDiv">
-                        <div class="form_row form_row_inner">
-                            <input type="checkbox" name="punchType" value="GPS" id="punch_GPS" class="form_checkbox_leimaus">
-                            <label for="punch_GPS" class="form_innerLabel form_label"><span>GPS</span></label>
-                        </div>
-                        <div class="form_row form_row_inner">
-                            <input type="checkbox" name="punchType" value="NFC" id="punch_NFC" class="form_checkbox_leimaus">
-                            <label for="punch_NFC" class="form_innerLabel form_label"><span>NFC</span></label>
-                        </div>
-                        <div class="form_row form_row_inner">
-                            <input type="checkbox" name="punchType" value="QR" id="punch_QR" class="form_checkbox_leimaus">
-                            <label for="punch_QR" class="form_innerLabel form_label"><span>QR</span></label>
-                        </div>
-                        <div class="form_row form_row_inner">
-                            <input type="checkbox" name="punchType" value="Lomake" id="punch_Lomake"
-                                   class="form_checkbox_leimaus">
-                            <label for="punch_Lomake" class="form_innerLabel form_label"><span>Lomake</span></label>
+    <!-- Tämän tiedoston sisältöä saa muuttaa vapaasti tästä kommentista eteenpäin ! -->
+    <div class="container">
+        <div class="formContainer mContainer">
+            <h1 id="mainTitle">Lisää joukkue</h1>
+            <form id="suunnistusForm" class="form">
+                <fieldset>
+                    <legend>Joukkueen tiedot</legend>
+                    <div class="form_row" id="nimiRow">
+                        <label for="teamNameInput" class="form_label">
+                            <span>Nimi</span>
+                        </label>
+                        <div class="form_data">
+                            <input type="text" id="teamNameInput" name="teamName" class="textField" required>
                         </div>
                     </div>
-                </div>
-                <div class="form_row" id="sarjaRow">
-                    <label for="series" class="form_label">
-                        <span>Sarja</span>
-                    </label>
-                    <div id="series" class="form_innerDiv">
-                        
+                    <div class="form_row" id="luontiRow">
+                        <label for="creationDate" class="form_label">
+                            <span>Luontiaika</span>
+                        </label>
+                        <div class="form_data">
+                            <input type="datetime-local" id="creationDate" name="creationDate" max="2018-01-01T01:00" class="textField" required>
+                        </div>
                     </div>
-                </div>
-            </fieldset>
-            <fieldset>
-                <legend>Jäsenet</legend>
-                <div class="form_row">
-                    <label for="jasen_input_1" class="form_label">
-                        <span>Jäsen 1</span>
-                    </label>
-                    <div class="form_data">
-                        <input type="text" id="jasen_input_1" name="jasen_input_1" class="textField jasenField">
+                    <div class="form_row" id="leimausRow">
+                        <label for="punchSystem" class="form_label">
+                            <span>Leimaustapa</span>
+                        </label>
+                        <div id="punchSystem" class="form_innerDiv">
+                            <div class="form_row form_row_inner">
+                                <input type="checkbox" name="punchType" value="GPS" id="punch_GPS" class="form_checkbox_leimaus">
+                                <label for="punch_GPS" class="form_innerLabel form_label">
+                                    <span>GPS</span>
+                                </label>
+                            </div>
+                            <div class="form_row form_row_inner">
+                                <input type="checkbox" name="punchType" value="NFC" id="punch_NFC" class="form_checkbox_leimaus">
+                                <label for="punch_NFC" class="form_innerLabel form_label">
+                                    <span>NFC</span>
+                                </label>
+                            </div>
+                            <div class="form_row form_row_inner">
+                                <input type="checkbox" name="punchType" value="QR" id="punch_QR" class="form_checkbox_leimaus">
+                                <label for="punch_QR" class="form_innerLabel form_label">
+                                    <span>QR</span>
+                                </label>
+                            </div>
+                            <div class="form_row form_row_inner">
+                                <input type="checkbox" name="punchType" value="Lomake" id="punch_Lomake" class="form_checkbox_leimaus">
+                                <label for="punch_Lomake" class="form_innerLabel form_label">
+                                    <span>Lomake</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="form_row">
-                    <label for="jasen_input_2" class="form_label">
-                        <span>Jäsen 2</span>
-                    </label>
-                    <div class="form_data">
-                        <input type="text" id="jasen_input_2" name="jasen_input_2" class="textField jasenField">
-                    </div>
-                </div>
-                <div class="form_row">
-                    <label for="jasen_input_3" class="form_label">
-                        <span>Jäsen 3</span>
-                    </label>
-                    <div class="form_data">
-                        <input type="text" id="jasen_input_3" name="jasen_input_3" class="textField jasenField">
-                    </div>
-                </div>
-                <div class="form_row">
-                    <label for="jasen_input_4" class="form_label">
-                        <span>Jäsen 4</span>
-                    </label>
-                    <div class="form_data">
-                        <input type="text" id="jasen_input_4" name="jasen_input_4" class="textField jasenField">
-                    </div>
-                </div>
-                <div class="form_row">
-                    <label for="jasen_input_5" class="form_label">
-                        <span>Jäsen 5</span>
-                    </label>
-                    <div class="form_data">
-                        <input type="text" id="jasen_input_5" name="jasen_input_5" class="textField jasenField">
-                    </div>
-                </div>
-            </fieldset>
-            <fieldset>
-                <legend>Rastileimaukset</legend>
-                <div class="grid3 tableHeader">
-                    <div class="tableTitle">Rasti</div>
-                    <div class="tableTitle">Aika</div>
-                    <div class="tableTitle">Poista</div>
-                </div>
-                <div class="tableContent">
-                    <div class="grid3">
-                        <input list="rastit">
-                        <datalist class="tableTitle" id="rastit">
-                            <option value="B1">
-                            <option value="B2">
-                        </datalist>
-                        <input type="datetime-local" name="creationDate" max="2018-01-01T01:00:00"
-                               class="textField">
-                        <input type="checkbox" class="removeCheckbox"></input>
-                    </div>
-                </div>
-            </fieldset>
-            <input type="submit" class="button" value="Tallenna" id="submitFormButton">
-        </form>
-    </div>
-    <div class="listContainer mContainer" id="teamListContainer">
+                    <div class="form_row" id="sarjaRow">
+                        <label for="series" class="form_label">
+                            <span>Sarja</span>
+                        </label>
+                        <div id="series" class="form_innerDiv">
 
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Jäsenet</legend>
+                    <div class="form_row">
+                        <label for="jasen_input_1" class="form_label">
+                            <span>Jäsen 1</span>
+                        </label>
+                        <div class="form_data">
+                            <input type="text" id="jasen_input_1" name="jasen_input_1" class="textField jasenField">
+                        </div>
+                    </div>
+                    <div class="form_row">
+                        <label for="jasen_input_2" class="form_label">
+                            <span>Jäsen 2</span>
+                        </label>
+                        <div class="form_data">
+                            <input type="text" id="jasen_input_2" name="jasen_input_2" class="textField jasenField">
+                        </div>
+                    </div>
+                    <div class="form_row">
+                        <label for="jasen_input_3" class="form_label">
+                            <span>Jäsen 3</span>
+                        </label>
+                        <div class="form_data">
+                            <input type="text" id="jasen_input_3" name="jasen_input_3" class="textField jasenField">
+                        </div>
+                    </div>
+                    <div class="form_row">
+                        <label for="jasen_input_4" class="form_label">
+                            <span>Jäsen 4</span>
+                        </label>
+                        <div class="form_data">
+                            <input type="text" id="jasen_input_4" name="jasen_input_4" class="textField jasenField">
+                        </div>
+                    </div>
+                    <div class="form_row">
+                        <label for="jasen_input_5" class="form_label">
+                            <span>Jäsen 5</span>
+                        </label>
+                        <div class="form_data">
+                            <input type="text" id="jasen_input_5" name="jasen_input_5" class="textField jasenField">
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Rastileimaukset</legend>
+                    <div class="grid3 tableHeader">
+                        <div class="tableTitle">Rasti</div>
+                        <div class="tableTitle">Aika</div>
+                        <div class="tableTitle">Poista</div>
+                    </div>
+                    <div class="tableContent">
+                        <div class="grid3">
+                            <input list="rastit">
+                            <datalist class="tableTitle" id="rastit">
+                                <option value="B1">
+                                    <option value="B2">
+                            </datalist>
+                            <input type="datetime-local" name="creationDate" max="2018-01-01T01:00:00" class="textField">
+                            <input type="checkbox" class="removeCheckbox"></input>
+                        </div>
+                    </div>
+                </fieldset>
+                <input type="submit" class="button" value="Tallenna" id="submitFormButton">
+            </form>
+        </div>
+        <div class="formContainer mContainer">
+            <h2 id="kilpailuTitle">Lisää kilpailu</h2>
+        </div>
+        <div class="listContainer mContainer" id="teamListContainer">
+            <form id="kisaform" class="form">
+                <fieldset>
+                    <legend>
+                        Lisää joukkue
+                    </legend>
+                    <div class="form_row">
+                        <label for="kisaNimiInput" class="form_label">
+                            <span>Nimi</span>
+                        </label>
+                        <div>
+                            <input type="text" id="kisaNimiInput" required>
+                        </div>
+                    </div>
+                    <div class="form_row">
+                        <label for="kisaKestoInput" class="form_label">
+                            <span>Kesto</span>
+                        </label>
+                        <div>
+                            <input type="number" id="kisaKestoInput" min="1">
+                        </div>
+                    </div>
+                    <div class="form_row">
+                        <label for="kisaAlkuaika" class="form_label">
+                            <span>Alkuaika</span>
+                        </label>
+                        <div>
+                            <input type="datetime-local" id="kisaAlkuaika" required>
+                        </div>
+                    </div>
+                    <div class="form_row">
+                        <label for="kisaLoppuaika" class="form_label">
+                            <span>Loppuaika</span>
+                        </label>
+                        <div>
+                            <input type="datetime-local" id="kisaLoppuaika" required>
+                        </div>
+                    </div>
+                    <div class="form_row">
+                        <label for="kisaSarjat" class="form_label">
+                            <span>Sarjat</span>
+                        </label>
+                        <div>
+                            <input type="text" id="kisaSarjat">
+                        </div>
+                    </div>
+                </fieldset>
+                <input type="submit" class="button" value="Tallenna" id="submitSarjaButton">
+            </form>
+        </div>
     </div>
-</div>
 
 </body>
+
 </html>
