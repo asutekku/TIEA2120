@@ -14,6 +14,7 @@ let kisaForm: HTMLFormElement;
 let joukkueet: Joukkue[];
 let sarjat: Sarja[];
 let kisat: Kisa[];
+let rastit: Rasti[];
 let editing = false;
 let tempLeimaukset;
 let tempID;
@@ -40,7 +41,9 @@ class suunnistusApp {
                     Util.getSarjaFromCode(e.sarja),
                     e.seura,
                     e.id,
-                    e.rastit,
+                    e.rastit.map(e=> {
+                        return new Rastileimaus(e.aika, e.id.toString());
+                    }),
                     e.pisteet,
                     e.matka,
                     e.leimaustapa,
@@ -51,6 +54,8 @@ class suunnistusApp {
             e =>
                 new Kisa(e.nimi, e.id, new Date(e.loppuaika).getTime(), e.kesto, new Date(e.alkuaika).getTime(), sarjat)
         );
+
+        rastit = data.rastit.map(e => new Rasti(e.lon, e.koodi, e.lat, e.id, e.pisteet));
     }
 }
 
@@ -70,7 +75,7 @@ class UI {
     static setTeamHandlers(): void {
         const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
         const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
-        teamInput.onblur = function() {
+        teamInput.onblur = function () {
             if (Validate.teamUnique(teamInput.value)) {
                 teamInput.classList.remove("invalid");
             } else {
@@ -95,7 +100,7 @@ class UI {
         );
         teamInput.addEventListener(
             "invalid",
-            function() {
+            function () {
                 if (!Validate.teamUnique(teamInput.value)) {
                     this.setCustomValidity(`"${teamInput.value}" on jo käytössä, valitse toinen nimi!`);
                 }
@@ -160,7 +165,7 @@ class UI {
             kisaInputs = [kisaKesto, kisaAlku, kisaLoppu];
         kisaNimi.addEventListener(
             "submit",
-            function() {
+            function () {
                 kisaNimi.setCustomValidity("");
                 if (!Validate.kisaUnique(kisaNimi.value)) {
                     kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -170,7 +175,7 @@ class UI {
             },
             false
         );
-        kisaNimi.onblur = function() {
+        kisaNimi.onblur = function () {
             kisaNimi.setCustomValidity("");
             if (!Validate.kisaUnique(kisaNimi.value)) {
                 kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -259,15 +264,45 @@ class UI {
                 jasenIndex++;
             }
         });
+        Array.from(document.getElementsByClassName("rastiLeimausRow")).forEach(e => e.remove());
+        UI.setOptions();
+        let rastiTable = document.getElementById("rastiTable");
+        if (team.rastit) team.rastit.forEach(e=>{
+            let rasti = Validate.getRasti(e.id);
+            console.log(rasti);
+            if (rasti) {
+                rastiTable.appendChild(UI.leimausRow(rasti.koodi, Util.getDate(new Date(e.aika))));
+            }
+        })
+        UI.fixOptions(team);
+    }
+
+    static setOptions():void {
+        let rastiSelection = document.getElementById("rastit");
+        rastit.forEach(e=>{
+            const option = document.createElement("option");
+            option.setAttribute("value",e.koodi);
+            rastiSelection.appendChild(option);
+        })
+    }
+
+    static fixOptions(team):void {
+        let rastiSelection = document.getElementById("rastit");
+        team.rastit.forEach(e=>{
+            let rasti = Validate.getRasti(e.id);
+            if (rasti) rastiSelection.querySelector(`option[value=${rasti.koodi}`).remove();
+        })
     }
 
     static getTeamList(): DocumentFragment {
         const frag = document.createDocumentFragment();
         const list = document.createElement("ul");
         list.id = "teamList";
+        list.classList.add("flex-container", "wrap");
         joukkueet.sort().forEach(e => {
             const li = document.createElement("li");
             li.textContent = e.nimi;
+            li.classList.add("flex-item");
             li.addEventListener("click", () => {
                 applicationForm.reset();
                 (<HTMLInputElement>document.getElementById("series_2h")).checked = true;
@@ -308,6 +343,32 @@ class UI {
             kisaSelect.appendChild(option);
         });
     }
+
+    static leimausRow(rastiID: string, rastiaika: string): DocumentFragment {
+        const frag = document.createDocumentFragment(),
+            row = document.createElement("tr"),
+            rastiCell = document.createElement("td"),
+            aikaCell = document.createElement("td"),
+            poistoCell = document.createElement("td"),
+            rastiInputlist = document.createElement("input"),
+            rastiDateInput = document.createElement("input"),
+            rastiPoistoInput = document.createElement("input");
+        row.classList.add("rastiLeimausRow");
+        row.appendChild(rastiCell);
+        rastiInputlist.setAttribute("list", "rastit");
+        rastiInputlist.setAttribute("value", rastiID);
+        rastiCell.appendChild(rastiInputlist);
+        row.appendChild(aikaCell);
+        rastiDateInput.setAttribute("type", "datetime-local");
+        rastiDateInput.setAttribute("value", rastiaika);
+        aikaCell.appendChild(rastiDateInput);
+        row.appendChild(poistoCell);
+        rastiPoistoInput.setAttribute("type", "checkbox");
+        rastiPoistoInput.setAttribute("name", "removeCheckbox");
+        poistoCell.appendChild(rastiPoistoInput);
+        frag.appendChild(row);
+        return frag;
+    }
 }
 
 class Validate {
@@ -332,12 +393,13 @@ class Validate {
                 Validate.getLeimaustapa(),
                 Util.getDate(new Date())
             );
-            joukkueet.push(newTeam);
+            if (!editing) joukkueet.push(newTeam);
             dataset.saveJoukkue(newTeam);
             applicationForm.reset();
             (<HTMLInputElement>document.getElementById("series_2h")).checked = true;
             UI.initHandlers();
             Util.removeElement("teamList"); //:^)
+            Array.from(document.getElementsByClassName("rastiLeimausRow")).forEach(e => e.remove());
             document.getElementById("teamListContainer").appendChild(UI.getTeamList());
             alert(`Joukkue "${teamName}" ${editing ? "lisätty" : "päivitetty"} onnistuneesti`);
             return true;
@@ -402,6 +464,12 @@ class Validate {
         return Array.from(applicationForm.querySelectorAll("input.jasenField"))
             .map(e => (e as HTMLInputElement).value)
             .filter(e => e.trim() !== "");
+    }
+
+    static getRasti(rastiID:number):Rasti {
+        return rastit.find(leimaus => {
+            return leimaus.id === rastiID;
+        });
     }
 
     static getSarjaByID(id: number): string {
@@ -472,18 +540,7 @@ class dataset {
             sarja: team.sarja.id,
             seura: team.seura,
             id: team.id,
-            rastit: team.rastit
-                ? team.rastit.map(e => {
-                      return [
-                          {
-                              aika: e.aika,
-                              id: e.id
-                          }
-                      ];
-                  })
-                : tempLeimaukset
-                    ? tempLeimaukset
-                    : null,
+            rastit: team.rastit,
             pisteet: team.pisteet,
             matka: team.matka,
             leimaustapa: team.leimaustapa,
@@ -491,7 +548,7 @@ class dataset {
         };
         if (editing) {
             const index = joukkueet
-                .map(function(e) {
+                .map(function (e) {
                     return e.id;
                 })
                 .indexOf(tempID);
@@ -535,7 +592,7 @@ class Joukkue {
         sarja: Sarja,
         seura: string | null,
         id: number,
-        rastit: Object[],
+        rastit: Rastileimaus[],
         pisteet: number,
         matka: number,
         leimaustapa: string[],
@@ -546,11 +603,7 @@ class Joukkue {
         this.sarja = sarja;
         this.seura = seura;
         this.id = id;
-        this.rastit = rastit
-            ? rastit.map(leimaus => {
-                  return new Rastileimaus((leimaus as any).aika, (leimaus as any).id);
-              })
-            : null;
+        this.rastit = rastit;
         this.pisteet = pisteet;
         this.matka = matka;
         this.leimaustapa = leimaustapa;
@@ -564,7 +617,7 @@ class Rastileimaus {
 
     constructor(aika: string, id: string) {
         this.aika = Date.parse(aika);
-        this.id = parseFloat(id);
+        this.id = parseInt(id);
     }
 }
 
