@@ -14,6 +14,9 @@ let kisaForm: HTMLFormElement;
 let joukkueet: Joukkue[];
 let sarjat: Sarja[];
 let kisat: Kisa[];
+let editing = false;
+let tempLeimaukset;
+let tempID;
 
 class suunnistusApp {
     public static main(): void {
@@ -41,7 +44,7 @@ class suunnistusApp {
                     e.pisteet,
                     e.matka,
                     e.leimaustapa,
-                    e.luontiaika
+                    Util.getDate(new Date(e.luontiaika))
                 )
         );
         kisat = data.kisat.map(
@@ -233,6 +236,8 @@ class UI {
     }
 
     static setJoukkueForm(team: Joukkue): void {
+        editing = true;
+        tempLeimaukset = team.rastit;
         (<HTMLInputElement>applicationForm.querySelector("input[name=teamName]")).value = team.nimi;
         (<HTMLInputElement>applicationForm.querySelector("input[name=creationDate]")).value = team.luontiaika;
         applicationForm.querySelectorAll("input[name=punchType]").forEach(e => {
@@ -245,6 +250,13 @@ class UI {
         applicationForm.querySelectorAll("input[name=sarjaPunch]").forEach(e => {
             if ((e as HTMLInputElement).value == Validate.getSarjaByID(team.sarja.id)) {
                 (e as HTMLInputElement).checked = true;
+            }
+        });
+        let jasenIndex = 0;
+        applicationForm.querySelectorAll("input[name^='jasen_input']").forEach(e => {
+            if (jasenIndex < team.jasenet.length) {
+                (e as HTMLInputElement).value = team.jasenet[jasenIndex];
+                jasenIndex++;
             }
         });
     }
@@ -268,6 +280,7 @@ class UI {
     }
 
     static getSarjaList(): DocumentFragment {
+        if (document.getElementById("kisasarjaList")) document.getElementById("kisasarjaList").remove();
         const frag = document.createDocumentFragment();
         const list = document.createElement("ul");
         list.id = "kisasarjaList";
@@ -312,7 +325,7 @@ class Validate {
                 Validate.getJasenet(),
                 Validate.getSarja(),
                 null,
-                Util.generateID(),
+                editing ? tempID : Util.generateID(),
                 null,
                 0,
                 0,
@@ -326,7 +339,7 @@ class Validate {
             UI.initHandlers();
             Util.removeElement("teamList"); //:^)
             document.getElementById("teamListContainer").appendChild(UI.getTeamList());
-            alert(`Joukkue ${teamName} lisätty onnistuneesti`);
+            alert(`Joukkue "${teamName}" ${editing ? "lisätty" : "päivitetty"} onnistuneesti`);
             return true;
         }
         return false;
@@ -358,7 +371,7 @@ class Validate {
     static kisaNameInput(): string | null {
         const kisaNimi: HTMLInputElement = kisaForm.querySelector("input[name=kisaNimi]");
         kisaNimi.setCustomValidity("");
-        if (!Validate.kisaUnique(kisaNimi.value)) {
+        if (!Validate.kisaUnique(kisaNimi.value) && !editing) {
             kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
             return null;
         } else if (kisaNimi.value.trim() === "") {
@@ -371,7 +384,7 @@ class Validate {
     static teamNameInput(): boolean {
         const teamName: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
         teamName.setCustomValidity("");
-        if (!Validate.teamUnique(teamName.value)) {
+        if (!Validate.teamUnique(teamName.value) && !editing) {
             teamName.setCustomValidity(`"${teamName.value}" on jo käytössä, valitse toinen nimi!`);
             return false;
         } else if (teamName.value.trim() === "") {
@@ -459,20 +472,34 @@ class dataset {
             sarja: team.sarja.id,
             seura: team.seura,
             id: team.id,
-            rastit: team.rastit.map(e => {
-                return [
-                    {
-                        aika: e.aika,
-                        id: e.id
-                    }
-                ];
-            }),
+            rastit: team.rastit
+                ? team.rastit.map(e => {
+                      return [
+                          {
+                              aika: e.aika,
+                              id: e.id
+                          }
+                      ];
+                  })
+                : tempLeimaukset
+                    ? tempLeimaukset
+                    : null,
             pisteet: team.pisteet,
             matka: team.matka,
             leimaustapa: team.leimaustapa,
             luontiaika: team.luontiaika
         };
-        data.joukkueet.push(joukkue);
+        if (editing) {
+            const index = joukkueet
+                .map(function(e) {
+                    return e.id;
+                })
+                .indexOf(tempID);
+            data.joukkueet[index] = joukkue;
+        } else {
+            data.joukkueet.push(joukkue);
+        }
+        editing = false;
         UI.updateKisaSelect();
     }
 
@@ -623,12 +650,10 @@ class Util {
             z(date.getMonth() + 1) +
             "-" +
             z(date.getDate()) +
-            " " +
+            "T" +
             z(date.getHours()) +
             ":" +
-            z(date.getMinutes()) +
-            ":" +
-            z(date.getSeconds())
+            z(date.getMinutes())
         );
     }
 
