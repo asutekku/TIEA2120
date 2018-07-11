@@ -56,11 +56,6 @@ input {
     flex: 1 1 160px;
 }
 
-.grid3 {
-    display:grid;
-    grid-column-gap: 5px;
-    grid-template-columns: repeat(3, 1fr);
-}
 
 @media screen and (max-width: 600px) {
     .form_row_inner {
@@ -79,13 +74,25 @@ input {
         width: 100%;
     }
 }
-@media screen and (min-width: 1200px) {
-    .form {
-        display:grid;
-        grid-column-gap: 5px;
-        grid-template-columns: repeat(3, 1fr);
+
+@media screen and (min-width: 600px){
+    .container {
+        display:flex;
+        flex-direction: row-reverse;
     }
 }
+
+@media screen and (min-width: 1200px) {
+
+
+    .form {
+        /*display:grid;
+        grid-column-gap: 5px;
+        grid-template-columns: repeat(3, 1fr);*/
+    }
+}
+
+
 
 .button {
     float:left;

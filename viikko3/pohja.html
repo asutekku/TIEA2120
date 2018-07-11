@@ -4,16 +4,18 @@
 <head>
     <script type="text/javascript" src="http://appro.mit.jyu.fi/tiea2120/vt/vt3/data.js"></script>
     <script type="text/javascript" src="build/vt3.js"></script>
-    <link rel="StyleSheet" href="tyylit.css" type="text/css" />
+    <link rel="StyleSheet" href="tyylit.css" type="text/css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="utf-8" />
+    <meta charset="utf-8"/>
     <title>Tulospalvelu</title>
 </head>
 
 <body>
 
-    <!-- Tämän tiedoston sisältöä saa muuttaa vapaasti tästä kommentista eteenpäin ! -->
-    <div class="container">
+<!-- Tämän tiedoston sisältöä saa muuttaa vapaasti tästä kommentista eteenpäin ! -->
+<div class="container">
+    <div class="listContainer mContainer" id="teamListContainer"></div>
+    <div>
         <div class="formContainer mContainer">
             <h1 id="mainTitle">Lisää joukkue</h1>
             <form id="suunnistusForm" class="form">
@@ -32,7 +34,8 @@
                             <span>Luontiaika</span>
                         </label>
                         <div class="form_data">
-                            <input type="datetime-local" id="creationDate" name="creationDate" max="2018-01-01T01:00" class="textField" required>
+                            <input type="datetime-local" id="creationDate" name="creationDate" max="2018-01-01T01:00"
+                                   class="textField" required>
                         </div>
                     </div>
                     <div class="form_row" id="leimausRow">
@@ -41,25 +44,29 @@
                         </label>
                         <div id="punchSystem" class="form_innerDiv">
                             <div class="form_row form_row_inner">
-                                <input type="checkbox" name="punchType" value="GPS" id="punch_GPS" class="form_checkbox_leimaus">
+                                <input type="checkbox" name="punchType" value="GPS" id="punch_GPS"
+                                       class="form_checkbox_leimaus">
                                 <label for="punch_GPS" class="form_innerLabel form_label">
                                     <span>GPS</span>
                                 </label>
                             </div>
                             <div class="form_row form_row_inner">
-                                <input type="checkbox" name="punchType" value="NFC" id="punch_NFC" class="form_checkbox_leimaus">
+                                <input type="checkbox" name="punchType" value="NFC" id="punch_NFC"
+                                       class="form_checkbox_leimaus">
                                 <label for="punch_NFC" class="form_innerLabel form_label">
                                     <span>NFC</span>
                                 </label>
                             </div>
                             <div class="form_row form_row_inner">
-                                <input type="checkbox" name="punchType" value="QR" id="punch_QR" class="form_checkbox_leimaus">
+                                <input type="checkbox" name="punchType" value="QR" id="punch_QR"
+                                       class="form_checkbox_leimaus">
                                 <label for="punch_QR" class="form_innerLabel form_label">
                                     <span>QR</span>
                                 </label>
                             </div>
                             <div class="form_row form_row_inner">
-                                <input type="checkbox" name="punchType" value="Lomake" id="punch_Lomake" class="form_checkbox_leimaus">
+                                <input type="checkbox" name="punchType" value="Lomake" id="punch_Lomake"
+                                       class="form_checkbox_leimaus">
                                 <label for="punch_Lomake" class="form_innerLabel form_label">
                                     <span>Lomake</span>
                                 </label>
@@ -140,9 +147,10 @@
                             <input list="rastit">
                             <datalist class="tableTitle" id="rastit">
                                 <option value="B1">
-                                    <option value="B2">
+                                <option value="B2">
                             </datalist>
-                            <input type="datetime-local" name="creationDate" max="2018-01-01T01:00:00" class="textField">
+                            <input type="datetime-local" name="creationDate" max="2018-01-01T01:00:00"
+                                   class="textField">
                             <input type="checkbox" class="removeCheckbox"></input>
                         </div>
                     </div>
@@ -152,8 +160,6 @@
         </div>
         <div class="formContainer mContainer">
             <h2 id="kilpailuTitle">Lisää kilpailu</h2>
-        </div>
-        <div class="listContainer mContainer" id="teamListContainer">
             <form id="kisaform" class="form">
                 <fieldset>
                     <legend>
@@ -199,10 +205,12 @@
                         </div>
                     </div>
                 </fieldset>
-                <input type="submit" name="kisaSaveButton" class="button" value="Tallenna kilpailu" id="submitSarjaButton">
+                <input type="submit" name="kisaSaveButton" class="button" value="Tallenna kilpailu"
+                       id="submitSarjaButton">
             </form>
         </div>
     </div>
+</div>
 
 </body>
 
