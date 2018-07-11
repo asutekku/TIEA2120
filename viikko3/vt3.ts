@@ -221,18 +221,37 @@ class UI {
         return frag;
     }
 
+    static setJoukkueForm(team: Joukkue): void {
+        (<HTMLInputElement>applicationForm.querySelector("input[name=teamName]")).value = team.nimi;
+        (<HTMLInputElement>applicationForm.querySelector("input[name=creationDate]")).value = team.luontiaika;
+        applicationForm.querySelectorAll("input[name=punchType]").forEach(e => {
+            team.leimaustapa.forEach(tapa => {
+                if (tapa === (e as HTMLInputElement).value) {
+                    (e as HTMLInputElement).checked = true;
+                }
+            });
+        });
+        applicationForm.querySelectorAll("input[name=sarjaPunch]").forEach(e => {
+            if ((e as HTMLInputElement).value == Validate.getSarjaByID(team.sarja)) {
+                (e as HTMLInputElement).checked = true;
+            }
+        });
+    }
+
     static getTeamList(): DocumentFragment {
         const frag = document.createDocumentFragment();
         const list = document.createElement("ul");
         list.id = "teamList";
-        joukkueet
-            .map(e => e.nimi)
-            .sort()
-            .forEach(e => {
-                const li = document.createElement("li");
-                li.textContent = e;
-                list.appendChild(li);
+        joukkueet.sort().forEach(e => {
+            const li = document.createElement("li");
+            li.textContent = e.nimi;
+            li.addEventListener("click", () => {
+                applicationForm.reset();
+                (<HTMLInputElement>document.getElementById("series_2h")).checked = true;
+                UI.setJoukkueForm(e);
             });
+            list.appendChild(li);
+        });
         frag.appendChild(list);
         return frag;
     }
@@ -254,16 +273,16 @@ class UI {
     }
 
     static updateKisaSelect(): void {
-        const kisaSelect:HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
+        const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
         while (kisaSelect.firstChild) {
             kisaSelect.removeChild(kisaSelect.firstChild);
         }
-        kisat.forEach(e=>{
-            const option:HTMLOptionElement = document.createElement("option");
+        kisat.forEach(e => {
+            const option: HTMLOptionElement = document.createElement("option");
             option.textContent = e.nimi;
             option.value = e.id.toString();
             kisaSelect.appendChild(option);
-        })
+        });
     }
 }
 
@@ -293,6 +312,7 @@ class Validate {
             joukkueet.push(newTeam);
             dataset.saveJoukkue(newTeam);
             applicationForm.reset();
+            (<HTMLInputElement>document.getElementById("series_2h")).checked = true;
             UI.initHandlers();
             Util.removeElement("teamList"); //:^)
             document.getElementById("teamListContainer").appendChild(UI.getTeamList());
@@ -357,6 +377,10 @@ class Validate {
         return Array.from(applicationForm.querySelectorAll("input.jasenField"))
             .map(e => (e as HTMLInputElement).value)
             .filter(e => e.trim() !== "");
+    }
+
+    static getSarjaByID(id): string {
+        return sarjat.find(e => e.id === id).nimi;
     }
 
     static getSarja(): Sarja {
