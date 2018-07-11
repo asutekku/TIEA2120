@@ -59,6 +59,7 @@ class UI {
         UI.setJasenHandlers();
         UI.setLeimausHandlers();
         UI.setKisaHandlers();
+        UI.updateKisaSelect();
     }
 
     static setTeamHandlers(): void {
@@ -251,6 +252,19 @@ class UI {
         frag.appendChild(list);
         return frag;
     }
+
+    static updateKisaSelect(): void {
+        const kisaSelect:HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
+        while (kisaSelect.firstChild) {
+            kisaSelect.removeChild(kisaSelect.firstChild);
+        }
+        kisat.forEach(e=>{
+            const option:HTMLOptionElement = document.createElement("option");
+            option.textContent = e.nimi;
+            option.value = e.id.toString();
+            kisaSelect.appendChild(option);
+        })
+    }
 }
 
 class Validate {
@@ -420,6 +434,7 @@ class dataset {
             luontiaika: team.luontiaika
         };
         data.joukkueet.push(joukkue);
+        UI.updateKisaSelect();
     }
     static saveKisa(kisa: Kisa): void {
         const newKisa = {
@@ -431,6 +446,7 @@ class dataset {
             sarjat: kisa.sarjat
         };
         data.kisat.push(newKisa);
+        UI.updateKisaSelect();
         console.log(data.kisat);
     }
 }
