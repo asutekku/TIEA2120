@@ -19,7 +19,6 @@ class suunnistusApp {
     public static main(): void {
         this.setVariables();
         UI.initHandlers();
-        console.log(sarjat);
         document.getElementById("teamListContainer").appendChild(UI.getTeamList());
     }
 
@@ -45,7 +44,10 @@ class suunnistusApp {
                     e.luontiaika
                 )
         );
-        kisat = data.kisat.map(e => new Kisa(e.nimi, e.id, e.loppuaika, e.kesto, e.alkuaika, sarjat));
+        kisat = data.kisat.map(
+            e =>
+                new Kisa(e.nimi, e.id, new Date(e.loppuaika).getTime(), e.kesto, new Date(e.alkuaika).getTime(), sarjat)
+        );
     }
 }
 
@@ -64,12 +66,18 @@ class UI {
 
     static setTeamHandlers(): void {
         const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
+        const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
         teamInput.onblur = function() {
             if (Validate.teamUnique(teamInput.value)) {
                 teamInput.classList.remove("invalid");
             } else {
                 teamInput.classList.add("invalid");
             }
+        };
+        kisaSelect.onchange = () => {
+            let kisaID = parseInt(kisaSelect.options[kisaSelect.selectedIndex].value);
+            document.getElementById("sarjaButtonContainer").remove();
+            document.getElementById("series").appendChild(UI.getSarjaButtons(kisaID));
         };
         teamInput.addEventListener(
             "input",
@@ -187,16 +195,19 @@ class UI {
         };
         kisaLoppu.onblur = () => {
             kisaLoppu.setCustomValidity("");
+            Validate.kisaTimeValid();
         };
     }
 
-    static getSarjaButtons(): DocumentFragment {
+    static getSarjaButtons(kisaID?: number): DocumentFragment {
         if (document.getElementById("sarjaButtonContainer")) Util.removeElement("sarjaButtonContainer");
         let frag = document.createDocumentFragment(),
             container = document.createElement("div"),
-            checked = false;
+            checked = false,
+            editSarja = sarjat;
+        if (kisaID) editSarja = kisat.find(kisa => kisa.id === kisaID).sarjat;
         container.id = "sarjaButtonContainer";
-        sarjat.forEach(e => {
+        editSarja.forEach(e => {
             const formRow: HTMLDivElement = document.createElement("div"),
                 sarjaRadio: HTMLInputElement = document.createElement("input"),
                 sarjaLabel: HTMLLabelElement = document.createElement("label"),
@@ -232,7 +243,7 @@ class UI {
             });
         });
         applicationForm.querySelectorAll("input[name=sarjaPunch]").forEach(e => {
-            if ((e as HTMLInputElement).value == Validate.getSarjaByID(team.sarja)) {
+            if ((e as HTMLInputElement).value == Validate.getSarjaByID(team.sarja.id)) {
                 (e as HTMLInputElement).checked = true;
             }
         });
@@ -308,7 +319,6 @@ class Validate {
                 Validate.getLeimaustapa(),
                 Util.getDate(new Date())
             );
-            console.log(newTeam);
             joukkueet.push(newTeam);
             dataset.saveJoukkue(newTeam);
             applicationForm.reset();
@@ -332,11 +342,13 @@ class Validate {
         if (valid) {
             const randomID = Util.generateID();
             const newSarjat: Sarja[] = sarjat.map(e => {
-                e.id = randomID;
+                e.kilpailu = randomID;
+                e.id = Util.generateID();
                 return e;
             });
             const newKisa = new Kisa(kisaName, randomID, loppu, kesto, alku, newSarjat);
             kisat.push(newKisa);
+            console.log(newKisa);
             dataset.saveKisa(newKisa);
             kisaForm.reset();
         }
@@ -379,7 +391,7 @@ class Validate {
             .filter(e => e.trim() !== "");
     }
 
-    static getSarjaByID(id): string {
+    static getSarjaByID(id: number): string {
         return sarjat.find(e => e.id === id).nimi;
     }
 
@@ -442,16 +454,19 @@ class Validate {
 class dataset {
     static saveJoukkue(team: Joukkue): void {
         const joukkue = {
-            nimi: team.nimi,
+            nimi: team.nimi.toString(),
             jasenet: team.jasenet,
             sarja: team.sarja.id,
             seura: team.seura,
             id: team.id,
-            rastit: team.rastit
-                ? team.rastit.map(e => {
-                      e.aika, e.id;
-                  })
-                : null,
+            rastit: team.rastit.map(e => {
+                return [
+                    {
+                        aika: e.aika,
+                        id: e.id
+                    }
+                ];
+            }),
             pisteet: team.pisteet,
             matka: team.matka,
             leimaustapa: team.leimaustapa,
@@ -460,6 +475,7 @@ class dataset {
         data.joukkueet.push(joukkue);
         UI.updateKisaSelect();
     }
+
     static saveKisa(kisa: Kisa): void {
         const newKisa = {
             nimi: kisa.nimi,
@@ -471,7 +487,6 @@ class dataset {
         };
         data.kisat.push(newKisa);
         UI.updateKisaSelect();
-        console.log(data.kisat);
     }
 }
 
