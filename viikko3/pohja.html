@@ -66,6 +66,16 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form_row" id="luontiRow">
+                        <label for="creationDate" class="form_label">
+                            <span>Kisa</span>
+                        </label>
+                        <div class="form_data form_innerDiv">
+                            <select id="kisaSelection">
+                                <option value="volvo">Rogaining</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="form_row" id="sarjaRow">
                         <label for="series" class="form_label">
                             <span>Sarja</span>
@@ -137,7 +147,7 @@
                         </div>
                     </div>
                 </fieldset>
-                <input type="submit" class="button" value="Tallenna" id="submitFormButton">
+                <input type="submit" class="button" value="Tallenna joukkue" id="submitFormButton">
             </form>
         </div>
         <div class="formContainer mContainer">
@@ -154,7 +164,7 @@
                             <span>Nimi</span>
                         </label>
                         <div>
-                            <input type="text" id="kisaNimiInput" required>
+                            <input type="text" name="kisaNimi" id="kisaNimiInput" required>
                         </div>
                     </div>
                     <div class="form_row">
@@ -162,7 +172,7 @@
                             <span>Kesto</span>
                         </label>
                         <div>
-                            <input type="number" id="kisaKestoInput" min="1">
+                            <input type="number" name="kisaKesto" id="kisaKestoInput" min="1">
                         </div>
                     </div>
                     <div class="form_row">
@@ -170,7 +180,7 @@
                             <span>Alkuaika</span>
                         </label>
                         <div>
-                            <input type="datetime-local" id="kisaAlkuaika" required>
+                            <input type="datetime-local" name="kisaAlku" id="kisaAlkuaika" required>
                         </div>
                     </div>
                     <div class="form_row">
@@ -178,19 +188,18 @@
                             <span>Loppuaika</span>
                         </label>
                         <div>
-                            <input type="datetime-local" id="kisaLoppuaika" required>
+                            <input type="datetime-local" name="kisaLoppu" id="kisaLoppuaika" required>
                         </div>
                     </div>
                     <div class="form_row">
-                        <label for="kisaSarjat" class="form_label">
+                        <label for="kisasarjaList" class="form_label">
                             <span>Sarjat</span>
                         </label>
-                        <div>
-                            <input type="text" id="kisaSarjat">
+                        <div id="sarjaListaus">
                         </div>
                     </div>
                 </fieldset>
-                <input type="submit" class="button" value="Tallenna" id="submitSarjaButton">
+                <input type="submit" name="kisaSaveButton" class="button" value="Tallenna kilpailu" id="submitSarjaButton">
             </form>
         </div>
     </div>

@@ -98,3 +98,7 @@ input {
 .invalid {
     border-color: red;
 }
+
+#kisasarjaList {
+    float:left;
+}
