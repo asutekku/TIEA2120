@@ -41,7 +41,7 @@ class suunnistusApp {
                     Util.getSarjaFromCode(e.sarja),
                     e.seura,
                     e.id,
-                    e.rastit.map(e=> {
+                    e.rastit.map(e => {
                         return new Rastileimaus(e.aika, e.id.toString());
                     }),
                     e.pisteet,
@@ -54,7 +54,6 @@ class suunnistusApp {
             e =>
                 new Kisa(e.nimi, e.id, new Date(e.loppuaika).getTime(), e.kesto, new Date(e.alkuaika).getTime(), sarjat)
         );
-
         rastit = data.rastit.map(e => new Rasti(e.lon, e.koodi, e.lat, e.id, e.pisteet));
     }
 }
@@ -75,7 +74,7 @@ class UI {
     static setTeamHandlers(): void {
         const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
         const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
-        teamInput.onblur = function () {
+        teamInput.onblur = function() {
             if (Validate.teamUnique(teamInput.value)) {
                 teamInput.classList.remove("invalid");
             } else {
@@ -100,7 +99,7 @@ class UI {
         );
         teamInput.addEventListener(
             "invalid",
-            function () {
+            function() {
                 if (!Validate.teamUnique(teamInput.value)) {
                     this.setCustomValidity(`"${teamInput.value}" on jo käytössä, valitse toinen nimi!`);
                 }
@@ -165,7 +164,7 @@ class UI {
             kisaInputs = [kisaKesto, kisaAlku, kisaLoppu];
         kisaNimi.addEventListener(
             "submit",
-            function () {
+            function() {
                 kisaNimi.setCustomValidity("");
                 if (!Validate.kisaUnique(kisaNimi.value)) {
                     kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -175,7 +174,7 @@ class UI {
             },
             false
         );
-        kisaNimi.onblur = function () {
+        kisaNimi.onblur = function() {
             kisaNimi.setCustomValidity("");
             if (!Validate.kisaUnique(kisaNimi.value)) {
                 kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -246,6 +245,8 @@ class UI {
         (<HTMLInputElement>applicationForm.querySelector("input[name=teamName]")).value = team.nimi;
         (<HTMLInputElement>applicationForm.querySelector("input[name=creationDate]")).value = team.luontiaika;
         applicationForm.querySelectorAll("input[name=punchType]").forEach(e => {
+            (e as HTMLInputElement).setCustomValidity("");
+            (e as HTMLInputElement).required = false;
             team.leimaustapa.forEach(tapa => {
                 if (tapa === (e as HTMLInputElement).value) {
                     (e as HTMLInputElement).checked = true;
@@ -253,45 +254,51 @@ class UI {
             });
         });
         applicationForm.querySelectorAll("input[name=sarjaPunch]").forEach(e => {
+            (e as HTMLInputElement).setCustomValidity("");
             if ((e as HTMLInputElement).value == Validate.getSarjaByID(team.sarja.id)) {
                 (e as HTMLInputElement).checked = true;
             }
         });
         let jasenIndex = 0;
         applicationForm.querySelectorAll("input[name^='jasen_input']").forEach(e => {
+            (e as HTMLInputElement).required = false;
+            (e as HTMLInputElement).setCustomValidity("");
             if (jasenIndex < team.jasenet.length) {
                 (e as HTMLInputElement).value = team.jasenet[jasenIndex];
                 jasenIndex++;
             }
         });
         Array.from(document.getElementsByClassName("rastiLeimausRow")).forEach(e => e.remove());
-        UI.setOptions();
+        UI.setOptions(team);
         let rastiTable = document.getElementById("rastiTable");
-        if (team.rastit) team.rastit.forEach(e=>{
-            let rasti = Validate.getRasti(e.id);
-            console.log(rasti);
-            if (rasti) {
-                rastiTable.appendChild(UI.leimausRow(rasti.koodi, Util.getDate(new Date(e.aika))));
-            }
-        })
-        UI.fixOptions(team);
+        if (team.rastit)
+            team.rastit.forEach(e => {
+                let rasti = Validate.getRasti(e.id);
+                if (rasti) {
+                    rastiTable.appendChild(UI.leimausRow(rasti.koodi, Util.getDate(new Date(e.aika))));
+                }
+            });
+        UI.fixOptions(team); // :)
     }
 
-    static setOptions():void {
-        let rastiSelection = document.getElementById("rastit");
-        rastit.forEach(e=>{
+    static setOptions(team?: Joukkue): void {
+        const rastiSelection = document.getElementById("rastit");
+        while (rastiSelection.firstChild) {
+            rastiSelection.removeChild(rastiSelection.firstChild);
+        }
+        rastit.forEach(e => {
             const option = document.createElement("option");
-            option.setAttribute("value",e.koodi);
+            option.setAttribute("value", e.koodi);
             rastiSelection.appendChild(option);
-        })
+        });
     }
 
-    static fixOptions(team):void {
+    static fixOptions(team): void {
         let rastiSelection = document.getElementById("rastit");
-        team.rastit.forEach(e=>{
+        team.rastit.forEach(e => {
             let rasti = Validate.getRasti(e.id);
-            if (rasti) rastiSelection.querySelector(`option[value=${rasti.koodi}`).remove();
-        })
+            if (rasti) rastiSelection.querySelector(`option[value="${rasti.koodi.toString()}"]`).remove();
+        });
     }
 
     static getTeamList(): DocumentFragment {
@@ -357,6 +364,20 @@ class UI {
         row.appendChild(rastiCell);
         rastiInputlist.setAttribute("list", "rastit");
         rastiInputlist.setAttribute("value", rastiID);
+        rastiInputlist.setCustomValidity("");
+        rastiInputlist.onblur = () => {
+            if (!Validate.rastikoodi(rastiInputlist.value)) {
+                rastiInputlist.setCustomValidity("Rastia ei ole olemassa");
+            } else if (
+                Array.from(document.querySelectorAll("input[list=rastit]")).filter(
+                    e => (e as HTMLInputElement).value === rastiID
+                ).length > 1
+            ) {
+                rastiInputlist.setCustomValidity("Rasti on jo leimattu");
+            } else {
+                rastiInputlist.setCustomValidity("");
+            }
+        };
         rastiCell.appendChild(rastiInputlist);
         row.appendChild(aikaCell);
         rastiDateInput.setAttribute("type", "datetime-local");
@@ -401,7 +422,8 @@ class Validate {
             Util.removeElement("teamList"); //:^)
             Array.from(document.getElementsByClassName("rastiLeimausRow")).forEach(e => e.remove());
             document.getElementById("teamListContainer").appendChild(UI.getTeamList());
-            alert(`Joukkue "${teamName}" ${editing ? "lisätty" : "päivitetty"} onnistuneesti`);
+            alert(`Joukkue "${teamName}" tallennettu onnistuneesti`);
+            editing = false;
             return true;
         }
         return false;
@@ -466,7 +488,7 @@ class Validate {
             .filter(e => e.trim() !== "");
     }
 
-    static getRasti(rastiID:number):Rasti {
+    static getRasti(rastiID: number): Rasti {
         return rastit.find(leimaus => {
             return leimaus.id === rastiID;
         });
@@ -487,6 +509,10 @@ class Validate {
         return Array.from(applicationForm.querySelectorAll("input[type=checkbox]"))
             .filter(e => (e as HTMLInputElement).checked)
             .map(e => (e as HTMLInputElement).value);
+    }
+
+    static rastikoodi(koodi): boolean {
+        return !!rastit.find(e => (e.koodi === koodi));
     }
 
     static kisaUnique(name): boolean {
@@ -548,7 +574,7 @@ class dataset {
         };
         if (editing) {
             const index = joukkueet
-                .map(function (e) {
+                .map(function(e) {
                     return e.id;
                 })
                 .indexOf(tempID);
