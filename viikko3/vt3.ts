@@ -4,7 +4,7 @@
 // voit tutkia tarkemmin käsiteltävää tietorakennetta konsolin kautta
 // tai json-editorin kautta osoitteessa http://jsoneditoronline.org/
 // Jos käytät json-editoria niin avaa data osoitteesta:
-// http://appro.mit.jyu.fi/tiea2120/vt/vt3/data.json
+// http://appro.mit.jyu.fi/tiea2120/vt/vt3/appData.json
 
 "use strict";
 
@@ -19,6 +19,7 @@ let editing = false;
 let tempLeimaukset;
 let tempID;
 let tempJoukkue;
+let appData = data;
 
 /**
  * Main class
@@ -34,10 +35,10 @@ class suunnistusApp {
         applicationForm = <HTMLFormElement>document.getElementById("suunnistusForm");
         kisaForm = <HTMLFormElement>document.getElementById("kisaform");
         submitButton = <HTMLButtonElement>document.getElementById("submitFormButton");
-        sarjat = data.kisat[0].sarjat.map(
+        sarjat = appData.kisat[0].sarjat.map(
             e => new Sarja(e.nimi, e.kilpailu, e.matka, e.kesto, e.loppuaika, e.altKey, e.id)
         );
-        joukkueet = data.joukkueet.map(
+        joukkueet = appData.joukkueet.map(
             e =>
                 new Joukkue(
                     e.nimi,
@@ -46,7 +47,7 @@ class suunnistusApp {
                     e.seura,
                     e.id,
                     e.rastit.map(e => {
-                        return new Rastileimaus(e.aika, e.id.toString());
+                        return new Rastileimaus(e.aika, parseInt(e.id.toString()));
                     }),
                     e.pisteet,
                     e.matka,
@@ -54,11 +55,11 @@ class suunnistusApp {
                     Util.getDate(new Date(e.luontiaika))
                 )
         );
-        kisat = data.kisat.map(
+        kisat = appData.kisat.map(
             e =>
                 new Kisa(e.nimi, e.id, new Date(e.loppuaika).getTime(), e.kesto, new Date(e.alkuaika).getTime(), sarjat)
         );
-        rastit = data.rastit.map(e => new Rasti(e.lon, e.koodi, e.lat, e.id, e.pisteet));
+        rastit = appData.rastit.map(e => new Rasti(e.lon, e.koodi, e.lat, e.id, e.pisteet));
     }
 }
 
@@ -345,7 +346,6 @@ class UI {
             option.setAttribute("value", e);
             rastiSelection.appendChild(option);
         });
-        console.log(selections);
     }
 
     /**
@@ -377,6 +377,7 @@ class UI {
                 applicationForm.reset();
                 (<HTMLInputElement>document.getElementById("series_2h")).checked = true;
                 tempJoukkue = e;
+                tempID = e.id;
                 UI.setJoukkueForm(e);
             });
             list.appendChild(li);
@@ -440,7 +441,6 @@ class UI {
             rastiPoistoInput = document.createElement("input"),
             sarja: Sarja | null = team ? Validate.getSarjaByID(team.sarja) : null,
             kisa: Kisa | null = team ? Validate.getKisaById(Validate.getSarjaByID(team.sarja).kilpailu) : Validate.getKisaById(5372934059196416);
-        console.log(kisa);
         let maxAika: number, minAika: number;
         if (sarja) {
             if (sarja.loppuaika !== null || sarja.alkuaika !== null) {
@@ -456,11 +456,11 @@ class UI {
         rastiInputlist.setAttribute("list", "rastit");
         rastiInputlist.setAttribute("value", rastiID ? rastiID : "");
         rastiInputlist.setCustomValidity("");
+        rastiDateInput.setAttribute("value", rastiAika ? Util.getDate(new Date(rastiAika)) : "");
         rastiInputlist.onblur = () => {
             UI.updateOptions();
             rastiDateInput.setAttribute("min", Util.getDate(new Date(minAika)));
             rastiDateInput.setAttribute("max", Util.getDate(new Date(maxAika)));
-            rastiDateInput.setAttribute("value", rastiAika ? rastiAika : Util.getDate(new Date()));
             if (rastiInputlist.value === "") {
                 rastiInputlist.setCustomValidity("Anna leimaukselle koodi");
             } else if (!Validate.rastikoodi(rastiInputlist.value)) {
@@ -475,7 +475,6 @@ class UI {
                 rastiInputlist.setCustomValidity("");
             }
             if (Validate.validToAddLeimausRow() && Validate.rastikoodi(rastiInputlist.value)) {
-                console.log("test");
                 document.getElementById("rastiTable").appendChild(UI.leimausRow());
             }
         };
@@ -508,7 +507,9 @@ class Validate {
             jasenet = Validate.getJasenet(),
             leimaustavat = Validate.getLeimaustapa(),
             sarja = Validate.getSarja(),
-            formValid: boolean = Validate.teamNameInput() && jasenet.length >= 2 && leimaustavat.length >= 1;
+            formValid: boolean = Validate.teamNameInput() && jasenet.length >= 2 && leimaustavat.length >= 1,
+            rastit = Validate.getRastitFromForm()
+        console.log(rastit);
         if (formValid) {
             const newTeam = new Joukkue(
                 teamName,
@@ -516,7 +517,7 @@ class Validate {
                 Validate.getSarja().id,
                 null,
                 editing ? tempID : Util.generateID(),
-                Validate.getRastitFromForm(),
+                rastit,
                 editing ? tempJoukkue.pisteet : 0,
                 editing ? tempJoukkue.matka : 0,
                 Validate.getLeimaustapa(),
@@ -553,7 +554,6 @@ class Validate {
             });
             const newKisa = new Kisa(kisaName, randomID, loppu, kesto, alku, newSarjat);
             kisat.push(newKisa);
-            console.log(newKisa);
             dataset.saveKisa(newKisa);
             kisaForm.reset();
         }
@@ -600,12 +600,19 @@ class Validate {
         return rastit.find(e => e.id === rastiID);
     }
 
-    static getRastitFromForm():Rasti[] {
+    static getRastiByCode(key: string): Rasti {
+        return rastit.find(e => e.koodi === key);
+    }
+
+    static getRastitFromForm(): Rastileimaus[] {
         const rows = Array.from(applicationForm.getElementsByClassName("rastiLeimausRow"));
-        const rastitFrom:Rasti[] = rows.map(e => {
-            const rastiKoodi:string = (e.childNodes[0].childNodes[0] as HTMLInputElement).value;
-            return rastit.find(e=>e.koodi.toString() === rastiKoodi.toString());
-        });
+        const rastitFrom: Rastileimaus[] = rows.filter(e => (e.childNodes[2].childNodes[0] as HTMLInputElement).checked === false)
+            .map(e => {
+                console.log((e.childNodes[0].childNodes[0] as HTMLInputElement).value);
+                const rastiKoodi: string = (e.childNodes[0].childNodes[0] as HTMLInputElement).value,
+                    rastiAika: string = Util.getDate(new Date((e.childNodes[1].childNodes[0] as HTMLInputElement).value));
+                return new Rastileimaus(rastiAika,Validate.getRastiByCode(rastiKoodi).id);
+            }).filter(e => !isNaN(e.aika));
         return rastitFrom;
     }
 
@@ -692,7 +699,7 @@ class dataset {
             sarja: team.sarja,
             seura: team.seura,
             id: team.id,
-            rastit: team.rastit,
+            rastit: team.rastit.map(e => ({aika: Util.getDate(new Date(e.aika)), id: e.id})),
             pisteet: team.pisteet,
             matka: team.matka,
             leimaustapa: team.leimaustapa,
@@ -704,12 +711,15 @@ class dataset {
                     return e.id;
                 })
                 .indexOf(tempID);
-            data.joukkueet[index] = joukkue;
+            appData.joukkueet[index] = joukkue;
         } else {
-            data.joukkueet.push(joukkue);
+            appData.joukkueet.push(joukkue);
         }
+        suunnistusApp.setVariables();
         console.log(joukkue);
+        console.log(data);
         editing = false;
+        console.log(appData);
         UI.updateKisaSelect();
     }
 
@@ -722,8 +732,7 @@ class dataset {
             alkuaika: new Date(kisa.alkuaika).toDateString(),
             sarjat: kisa.sarjat
         };
-        data.kisat.push(newKisa);
-        UI.updateKisaSelect();
+        appData.kisat.push(newKisa);
     }
 }
 
@@ -768,9 +777,9 @@ class Rastileimaus {
     public aika: number; //in unix time
     public id: number;
 
-    constructor(aika: string, id: string) {
+    constructor(aika: string, id: number) {
         this.aika = Date.parse(aika);
-        this.id = parseInt(id);
+        this.id = id;
     }
 }
 
