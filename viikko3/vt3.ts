@@ -74,7 +74,7 @@ class UI {
     static setTeamHandlers(): void {
         const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
         const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
-        teamInput.onblur = function() {
+        teamInput.onblur = function () {
             if (Validate.teamUnique(teamInput.value)) {
                 teamInput.classList.remove("invalid");
             } else {
@@ -99,7 +99,7 @@ class UI {
         );
         teamInput.addEventListener(
             "invalid",
-            function() {
+            function () {
                 if (!Validate.teamUnique(teamInput.value)) {
                     this.setCustomValidity(`"${teamInput.value}" on jo käytössä, valitse toinen nimi!`);
                 }
@@ -164,7 +164,7 @@ class UI {
             kisaInputs = [kisaKesto, kisaAlku, kisaLoppu];
         kisaNimi.addEventListener(
             "submit",
-            function() {
+            function () {
                 kisaNimi.setCustomValidity("");
                 if (!Validate.kisaUnique(kisaNimi.value)) {
                     kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -174,7 +174,7 @@ class UI {
             },
             false
         );
-        kisaNimi.onblur = function() {
+        kisaNimi.onblur = function () {
             kisaNimi.setCustomValidity("");
             if (!Validate.kisaUnique(kisaNimi.value)) {
                 kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -293,6 +293,24 @@ class UI {
         });
     }
 
+    static updateOptions(): void {
+        const rastiInputs = document.querySelectorAll("input[list=rastit]"),
+            rastiList = Array.from(rastiInputs)
+                .filter(e => (e as HTMLInputElement).value !== "" && rastit.find(l => l.koodi == (e as HTMLInputElement).value))
+                .map(e => (e as HTMLInputElement).value),
+            selections = rastit.map(e => e.koodi).filter(e => !rastiList.includes(e)),
+            rastiSelection = document.getElementById("rastit");
+        while (rastiSelection.firstChild) {
+            rastiSelection.removeChild(rastiSelection.firstChild);
+        }
+        selections.forEach(e => {
+            const option = document.createElement("option");
+            option.setAttribute("value", e);
+            rastiSelection.appendChild(option);
+        });
+        console.log(selections);
+    }
+
     static fixOptions(team): void {
         let rastiSelection = document.getElementById("rastit");
         team.rastit.forEach(e => {
@@ -366,7 +384,10 @@ class UI {
         rastiInputlist.setAttribute("value", rastiID);
         rastiInputlist.setCustomValidity("");
         rastiInputlist.onblur = () => {
-            if (!Validate.rastikoodi(rastiInputlist.value)) {
+            UI.updateOptions();
+            if (rastiInputlist.value == "") {
+                rastiInputlist.setCustomValidity("Anna leimaukselle koodi");
+            } else if (!Validate.rastikoodi(rastiInputlist.value)) {
                 rastiInputlist.setCustomValidity("Rastia ei ole olemassa");
             } else if (
                 Array.from(document.querySelectorAll("input[list=rastit]")).filter(
@@ -489,9 +510,7 @@ class Validate {
     }
 
     static getRasti(rastiID: number): Rasti {
-        return rastit.find(leimaus => {
-            return leimaus.id === rastiID;
-        });
+        return rastit.find(e => e.id === rastiID);
     }
 
     static getSarjaByID(id: number): string {
@@ -574,7 +593,7 @@ class dataset {
         };
         if (editing) {
             const index = joukkueet
-                .map(function(e) {
+                .map(function (e) {
                     return e.id;
                 })
                 .indexOf(tempID);
