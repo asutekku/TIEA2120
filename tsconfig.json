@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "outDir": "./viikko3/build",
+    "outFile": "./viikko3/build/vt3.js",
     "module": "amd",
     "allowJs": true,
     "target": "es6",
     "removeComments": false,
-    "lib" : ["es2017","dom"]
+    "lib" : ["es2017","dom"],
   },
   "include": [
     "./viikko3/*"

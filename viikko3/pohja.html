@@ -140,18 +140,16 @@
                     <datalist id="rastit">
                     </datalist>
                     <div class="tableContent">
-                        <table id="rastiTable">
+                        <table id="rastiTableWrap">
+                            <thead>
                             <tr>
                                 <th>Rasti</th>
                                 <th>Aika</th>
                                 <th>Poista</th>
                             </tr>
-                            <tr class="rastiLeimausRow">
-                                <td><input list="rastit">
-                                </td>
-                                <td><input type="datetime-local" name="aika"></td>
-                                <td><input type="checkbox" name="removeCheckBox" id="check_A1"></td>
-                            </tr>
+                            </thead>
+                            <tbody id="rastiTable">
+                            </tbody>
                         </table>
                     </div>
                 </fieldset>

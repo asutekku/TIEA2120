@@ -18,7 +18,11 @@ let rastit: Rasti[];
 let editing = false;
 let tempLeimaukset;
 let tempID;
+let tempJoukkue;
 
+/**
+ * Main class
+ */
 class suunnistusApp {
     public static main(): void {
         this.setVariables();
@@ -38,7 +42,7 @@ class suunnistusApp {
                 new Joukkue(
                     e.nimi,
                     e.jasenet,
-                    Util.getSarjaFromCode(e.sarja),
+                    e.sarja,
                     e.seura,
                     e.id,
                     e.rastit.map(e => {
@@ -58,7 +62,13 @@ class suunnistusApp {
     }
 }
 
+/**
+ * Class for UI Actions
+ */
 class UI {
+    /**
+     * Inits application handelers
+     */
     static initHandlers(): void {
         applicationForm.addEventListener("submit", Validate.teamInput);
         kisaForm.addEventListener("submit", Validate.kisaInput);
@@ -69,8 +79,13 @@ class UI {
         UI.setLeimausHandlers();
         UI.setKisaHandlers();
         UI.updateKisaSelect();
+        UI.updateOptions();
+        document.getElementById("rastiTable").appendChild(UI.leimausRow());
     }
 
+    /**
+     * Sets team handlers
+     */
     static setTeamHandlers(): void {
         const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
         const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
@@ -108,6 +123,9 @@ class UI {
         );
     }
 
+    /**
+     * Sets handlers for jasen
+     */
     static setJasenHandlers(): void {
         let jasenFields: HTMLInputElement[] = Array.from(applicationForm.querySelectorAll("input.jasenField"));
         jasenFields.forEach(field => {
@@ -129,6 +147,9 @@ class UI {
         });
     }
 
+    /**
+     * Sets handlers for leimaus
+     */
     static setLeimausHandlers(): void {
         let leimausBoxes: HTMLInputElement[] = Array.from(
             applicationForm.querySelectorAll("input.form_checkbox_leimaus")
@@ -156,12 +177,14 @@ class UI {
         });
     }
 
+    /**
+     * Sets handlers for kisa
+     */
     static setKisaHandlers(): void {
         const kisaKesto: HTMLInputElement = kisaForm.querySelector("input[name=kisaKesto]"),
             kisaLoppu: HTMLInputElement = kisaForm.querySelector("input[name=kisaLoppu]"),
             kisaAlku: HTMLInputElement = kisaForm.querySelector("input[name=kisaAlku]"),
-            kisaNimi: HTMLInputElement = kisaForm.querySelector("input[name=kisaNimi]"),
-            kisaInputs = [kisaKesto, kisaAlku, kisaLoppu];
+            kisaNimi: HTMLInputElement = kisaForm.querySelector("input[name=kisaNimi]");
         kisaNimi.addEventListener(
             "submit",
             function () {
@@ -186,18 +209,16 @@ class UI {
             if (kisaKesto.value === "") {
                 kisaLoppu.min = kisaAlku.value;
             } else if (kisaAlku.value !== "") {
-                const newMin = new Date(
+                kisaLoppu.min = new Date(
                     new Date(kisaAlku.value).getTime() + parseInt(kisaKesto.value) * 3600000
                 ).toLocaleString();
-                kisaLoppu.min = newMin;
             }
         };
         kisaKesto.onchange = () => {
             if (kisaAlku.value !== "") {
-                const newMin = new Date(
+                kisaLoppu.min = new Date(
                     new Date(kisaAlku.value).getTime() + parseInt(kisaKesto.value) * 3600000
                 ).toLocaleString();
-                kisaLoppu.min = newMin;
             }
         };
         kisaLoppu.onblur = () => {
@@ -206,6 +227,11 @@ class UI {
         };
     }
 
+    /**
+     * Creates sarja radios
+     * @param {number} kisaID
+     * @returns {DocumentFragment} Radio button row
+     */
     static getSarjaButtons(kisaID?: number): DocumentFragment {
         if (document.getElementById("sarjaButtonContainer")) Util.removeElement("sarjaButtonContainer");
         let frag = document.createDocumentFragment(),
@@ -239,12 +265,16 @@ class UI {
         return frag;
     }
 
+    /**
+     * Initializes Joukke form
+     * @param {Joukkue} team
+     */
     static setJoukkueForm(team: Joukkue): void {
         editing = true;
         tempLeimaukset = team.rastit;
         (<HTMLInputElement>applicationForm.querySelector("input[name=teamName]")).value = team.nimi;
         (<HTMLInputElement>applicationForm.querySelector("input[name=creationDate]")).value = team.luontiaika;
-        applicationForm.querySelectorAll("input[name=punchType]").forEach(e => {
+        Array.from(applicationForm.querySelectorAll("input[name=punchType]")).forEach(e => {
             (e as HTMLInputElement).setCustomValidity("");
             (e as HTMLInputElement).required = false;
             team.leimaustapa.forEach(tapa => {
@@ -253,14 +283,14 @@ class UI {
                 }
             });
         });
-        applicationForm.querySelectorAll("input[name=sarjaPunch]").forEach(e => {
+        Array.from(applicationForm.querySelectorAll("input[name=sarjaPunch]")).forEach(e => {
             (e as HTMLInputElement).setCustomValidity("");
-            if ((e as HTMLInputElement).value == Validate.getSarjaByID(team.sarja.id)) {
+            if ((e as HTMLInputElement).value === Validate.getSarjaByID(team.sarja).nimi) {
                 (e as HTMLInputElement).checked = true;
             }
         });
         let jasenIndex = 0;
-        applicationForm.querySelectorAll("input[name^='jasen_input']").forEach(e => {
+        Array.from(applicationForm.querySelectorAll("input[name^='jasen_input']")).forEach(e => {
             (e as HTMLInputElement).required = false;
             (e as HTMLInputElement).setCustomValidity("");
             if (jasenIndex < team.jasenet.length) {
@@ -275,12 +305,16 @@ class UI {
             team.rastit.forEach(e => {
                 let rasti = Validate.getRasti(e.id);
                 if (rasti) {
-                    rastiTable.appendChild(UI.leimausRow(rasti.koodi, Util.getDate(new Date(e.aika))));
+                    rastiTable.appendChild(UI.leimausRow(rasti.koodi, Util.getDate(new Date(e.aika)), team));
                 }
             });
         UI.fixOptions(team); // :)
     }
 
+    /**
+     * Sets selections for rastiselector
+     * @param {Joukkue} team
+     */
     static setOptions(team?: Joukkue): void {
         const rastiSelection = document.getElementById("rastit");
         while (rastiSelection.firstChild) {
@@ -293,10 +327,13 @@ class UI {
         });
     }
 
+    /**
+     * Updates selecetions for rastiSelector
+     */
     static updateOptions(): void {
         const rastiInputs = document.querySelectorAll("input[list=rastit]"),
             rastiList = Array.from(rastiInputs)
-                .filter(e => (e as HTMLInputElement).value !== "" && rastit.find(l => l.koodi == (e as HTMLInputElement).value))
+                .filter(e => (e as HTMLInputElement).value !== "" && rastit.find(l => l.koodi === (e as HTMLInputElement).value))
                 .map(e => (e as HTMLInputElement).value),
             selections = rastit.map(e => e.koodi).filter(e => !rastiList.includes(e)),
             rastiSelection = document.getElementById("rastit");
@@ -311,6 +348,10 @@ class UI {
         console.log(selections);
     }
 
+    /**
+     * Fixes selections for rastiSelector :D
+     * @param team
+     */
     static fixOptions(team): void {
         let rastiSelection = document.getElementById("rastit");
         team.rastit.forEach(e => {
@@ -319,6 +360,10 @@ class UI {
         });
     }
 
+    /**
+     * Returns the list of teams
+     * @returns {DocumentFragment}
+     */
     static getTeamList(): DocumentFragment {
         const frag = document.createDocumentFragment();
         const list = document.createElement("ul");
@@ -331,6 +376,7 @@ class UI {
             li.addEventListener("click", () => {
                 applicationForm.reset();
                 (<HTMLInputElement>document.getElementById("series_2h")).checked = true;
+                tempJoukkue = e;
                 UI.setJoukkueForm(e);
             });
             list.appendChild(li);
@@ -339,6 +385,10 @@ class UI {
         return frag;
     }
 
+    /**
+     * Returns the list of sarjat in kisa
+     * @returns {DocumentFragment}
+     */
     static getSarjaList(): DocumentFragment {
         if (document.getElementById("kisasarjaList")) document.getElementById("kisasarjaList").remove();
         const frag = document.createDocumentFragment();
@@ -356,6 +406,9 @@ class UI {
         return frag;
     }
 
+    /**
+     * Updates kisaselect
+     */
     static updateKisaSelect(): void {
         const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
         while (kisaSelect.firstChild) {
@@ -369,7 +422,14 @@ class UI {
         });
     }
 
-    static leimausRow(rastiID: string, rastiaika: string): DocumentFragment {
+    /**
+     * Creates leimausrow
+     * @param {string} rastiID
+     * @param {string} rastiAika
+     * @param {Joukkue} team
+     * @returns {DocumentFragment}
+     */
+    static leimausRow(rastiID?: string, rastiAika?: string, team?: Joukkue): DocumentFragment {
         const frag = document.createDocumentFragment(),
             row = document.createElement("tr"),
             rastiCell = document.createElement("td"),
@@ -377,15 +437,31 @@ class UI {
             poistoCell = document.createElement("td"),
             rastiInputlist = document.createElement("input"),
             rastiDateInput = document.createElement("input"),
-            rastiPoistoInput = document.createElement("input");
+            rastiPoistoInput = document.createElement("input"),
+            sarja: Sarja | null = team ? Validate.getSarjaByID(team.sarja) : null,
+            kisa: Kisa | null = team ? Validate.getKisaById(Validate.getSarjaByID(team.sarja).kilpailu) : Validate.getKisaById(5372934059196416);
+        console.log(kisa);
+        let maxAika: number, minAika: number;
+        if (sarja) {
+            if (sarja.loppuaika !== null || sarja.alkuaika !== null) {
+                minAika = new Date(sarja.alkuaika).getTime();
+                maxAika = new Date(sarja.loppuaika).getTime();
+            }
+        } else {
+            minAika = new Date(kisa.alkuaika).getTime();
+            maxAika = new Date(kisa.loppuaika).getTime();
+        }
         row.classList.add("rastiLeimausRow");
         row.appendChild(rastiCell);
         rastiInputlist.setAttribute("list", "rastit");
-        rastiInputlist.setAttribute("value", rastiID);
+        rastiInputlist.setAttribute("value", rastiID ? rastiID : "");
         rastiInputlist.setCustomValidity("");
         rastiInputlist.onblur = () => {
             UI.updateOptions();
-            if (rastiInputlist.value == "") {
+            rastiDateInput.setAttribute("min", Util.getDate(new Date(minAika)));
+            rastiDateInput.setAttribute("max", Util.getDate(new Date(maxAika)));
+            rastiDateInput.setAttribute("value", rastiAika ? rastiAika : Util.getDate(new Date()));
+            if (rastiInputlist.value === "") {
                 rastiInputlist.setCustomValidity("Anna leimaukselle koodi");
             } else if (!Validate.rastikoodi(rastiInputlist.value)) {
                 rastiInputlist.setCustomValidity("Rastia ei ole olemassa");
@@ -398,11 +474,22 @@ class UI {
             } else {
                 rastiInputlist.setCustomValidity("");
             }
+            if (Validate.validToAddLeimausRow() && Validate.rastikoodi(rastiInputlist.value)) {
+                console.log("test");
+                document.getElementById("rastiTable").appendChild(UI.leimausRow());
+            }
+        };
+        rastiDateInput.onblur = () => {
+            const val: number = new Date(rastiDateInput.value).getTime();
+            if (val < minAika || val > maxAika && rastiInputlist.value !== "") {
+                rastiDateInput.setCustomValidity("Ajan tulee sijoittua kisan ajalle");
+            } else {
+                rastiDateInput.setCustomValidity("");
+            }
         };
         rastiCell.appendChild(rastiInputlist);
         row.appendChild(aikaCell);
         rastiDateInput.setAttribute("type", "datetime-local");
-        rastiDateInput.setAttribute("value", rastiaika);
         aikaCell.appendChild(rastiDateInput);
         row.appendChild(poistoCell);
         rastiPoistoInput.setAttribute("type", "checkbox");
@@ -426,12 +513,12 @@ class Validate {
             const newTeam = new Joukkue(
                 teamName,
                 Validate.getJasenet(),
-                Validate.getSarja(),
+                Validate.getSarja().id,
                 null,
                 editing ? tempID : Util.generateID(),
-                null,
-                0,
-                0,
+                Validate.getRastitFromForm(),
+                editing ? tempJoukkue.pisteet : 0,
+                editing ? tempJoukkue.matka : 0,
                 Validate.getLeimaustapa(),
                 Util.getDate(new Date())
             );
@@ -513,8 +600,24 @@ class Validate {
         return rastit.find(e => e.id === rastiID);
     }
 
-    static getSarjaByID(id: number): string {
-        return sarjat.find(e => e.id === id).nimi;
+    static getRastitFromForm():Rasti[] {
+        const rows = Array.from(applicationForm.getElementsByClassName("rastiLeimausRow"));
+        const rastitFrom:Rasti[] = rows.map(e => {
+            const rastiKoodi:string = (e.childNodes[0].childNodes[0] as HTMLInputElement).value;
+            return rastit.find(e=>e.koodi.toString() === rastiKoodi.toString());
+        });
+        return rastitFrom;
+    }
+
+    static getSarjaByID(id: number): Sarja {
+        return sarjat.find(e => e.id === id);
+    }
+
+    static validToAddLeimausRow(): boolean {
+        const rastiInputs = Array.from(document.querySelectorAll("input[list=rastit]")),
+            filled: number = rastiInputs.filter(e => (e as HTMLInputElement).value !== "").length;
+        return filled === rastiInputs.length;
+
     }
 
     static getSarja(): Sarja {
@@ -536,6 +639,10 @@ class Validate {
 
     static kisaUnique(name): boolean {
         return !kisat.find(e => e.nimi.toLowerCase() === name.trim().toLowerCase());
+    }
+
+    static getKisaById(id): Kisa {
+        return kisat.find(e => e.id === id);
     }
 
     static kisaTimeValid(): boolean {
@@ -582,7 +689,7 @@ class dataset {
         const joukkue = {
             nimi: team.nimi.toString(),
             jasenet: team.jasenet,
-            sarja: team.sarja.id,
+            sarja: team.sarja,
             seura: team.seura,
             id: team.id,
             rastit: team.rastit,
@@ -601,6 +708,7 @@ class dataset {
         } else {
             data.joukkueet.push(joukkue);
         }
+        console.log(joukkue);
         editing = false;
         UI.updateKisaSelect();
     }
@@ -627,14 +735,14 @@ class Joukkue {
     public pisteet: number;
     public matka: number;
     public jasenet: string[];
-    public sarja: Sarja;
+    public sarja: number;
     public leimaustapa: string[];
     public luontiaika: string;
 
     constructor(
         nimi: string,
         jasenet: string[],
-        sarja: Sarja,
+        sarja: number,
         seura: string | null,
         id: number,
         rastit: Rastileimaus[],
