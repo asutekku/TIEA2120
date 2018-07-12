@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- TIEA2120 viikkotehtävä 4 -->
+<html>
+
+<head>
+    <script type="text/javascript" src="build/vt4.js"></script>
+    <link rel="StyleSheet" href="style.css" type="text/css"/>
+    <meta charset="utf-8"/>
+    <title>Viikkotehtävä 4</title>
+</head>
+
+<body>
+<div class="topRight">
+    <button onclick="createOwl()">Lisää pöllö</button>
+</div>
+<div id="barContainer">
+    <!-- Palkkien luonti javascriptillä -->
+</div>
+<div id="owlContainer">
+    <object class="owl" data="http://appro.mit.jyu.fi/tiea2120/vt/vt4/owl.svg" type="image/svg+xml"></object>
+</div>
+<div class="centeredContainer">
+    <div class="rabbit">
+        <canvas id="rabbitLeft"></canvas>
+    </div>
+    <div class="rabbit">
+        <canvas id="rabbitRight"></canvas>
+    </div>
+</div>
+<div id="scrollerContainer">
+    <canvas id="scroller"></canvas>
+</div>
+<div id="scrollerContainer2">
+    <canvas id="scroller2"></canvas>
+</div>
+<div id="snowflakeContainer">
+    <!-- Lumihiutaleet js:llä tästä kopioimalla -->
+    <object id="flakeTemplate" class="snowflake" data="http://appro.mit.jyu.fi/tiea2120/vt/vt4/snowflake2.svg"
+            type="image/svg+xml"></object>
+</div>
+
+<!-- Lähdekuva(t) ja ruudun ulkopuolelle jäävät canvakset -->
+<img id="imgRabbit" alt="rabbit" class="hidden" crossorigin="" src="http://appro.mit.jyu.fi/tiea2120/vt/vt4/bunny.png"/>
+<canvas id="rabbitLeftSrc" class="hidden"></canvas>
+<canvas id="rabbitRightSrc" class="hidden"></canvas>
+</body>
+
+</html>

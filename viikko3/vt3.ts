@@ -534,6 +534,7 @@ class Validate {
             Array.from(document.getElementsByClassName("rastiLeimausRow")).forEach(e => e.remove());
             document.getElementById("teamListContainer").appendChild(UI.getTeamList());
             alert(`Joukkue "${teamName}" tallennettu onnistuneesti`);
+            document.getElementById("rastiTable").appendChild(UI.leimausRow());
             editing = false;
             return true;
         }
