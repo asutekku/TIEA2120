@@ -6,56 +6,59 @@ body {
     display: none;
 }
 
-/* Ylös ja alas liikkuva palkki */
+/**
+bar moving from right to left
+ */
 .gradientBar {
-    width: 100%;
-    height: 120px;
+    width: 160px;
+    height: 100%;
     position: fixed;
-    margin-top: -50vh;
-    animation: 8s infinite ease-in-out vertical-slide;
+    animation: 6s infinite ease-in-out barAnimation;
+    z-index: 0;
 }
 
-@keyframes vertical-slide {
-    from, to {
-        margin-top: -30vh;
+@keyframes barAnimation {
+    0% {
+        right: calc(0vw - 160px);
     }
-
-    40%, 60% {
-        margin-top: 95vh;
+    65% {
+        right: 110vw;
+    }
+    100% {
+        right: calc(0vw - 160px);
     }
 }
 
-/* Kimpoileva pöllö */
 .owl {
     width: 100px;
     position: fixed;
     margin-top: -50vh;
-    animation: 5s infinite linear owl-bounce;
+    z-index: 1;
+    animation: 5s infinite linear owl-animation;
 }
 
-@keyframes owl-bounce {
+@keyframes owl-animation {
     from, to {
         margin-top: 0;
-        margin-left: calc(50vw - 50px);
+        margin-left: 0;
     }
 
     25% {
-        margin-top: calc(50vh - 50px);
+        margin-top: calc(100vh - 100px);
         margin-left: calc(100vw - 100px);
     }
 
     50% {
         margin-top: calc(100vh - 100px);
-        margin-left: calc(50vw - 50px);
+        margin-left: 0;
     }
 
     75% {
-        margin-top: calc(50vh - 50px);
-        margin-left: 0;
+        margin-top: 0;
+        margin-left: calc(100vw - 100px);
     }
 }
 
-/* Laittaa sisällään olevat tavarat keskelle ruutua */
 .centeredContainer {
     position: fixed;
     width: 100vw;
@@ -66,23 +69,43 @@ body {
     justify-content: center;
 }
 
-
-/* Edestakaisin liikkuva halkaistu jänis */
-.rabbit {
-    animation: 5s infinite alternate ease rabbit-slide;
+.rabbitHalf {
+    z-index: 12;
 }
 
-@keyframes rabbit-slide {
+.rabbit {
+    position: fixed;
+    z-index: 10;
+}
+
+#rabbitLeft {
+    animation: 5s infinite alternate ease rabbit-slide-left;
+}
+
+#rabbitRight {
+    animation: 5s infinite alternate ease rabbit-slide-right;
+}
+
+@keyframes rabbit-slide-left {
     from {
-        /* inhottaa kovakoodata lukuja näin, mutta en tähän hätään
-         * keksi muutakaan sellaista ratkaisua, joka ei vaatisi
-         * merkittäviä rakennemuutoksia */
         margin-left: calc(50vw - 188px);
         margin-right: calc(50vw - 188px);
     }
 
     to {
         margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@keyframes rabbit-slide-right {
+    from {
+        margin-left: calc(50vw);
+        margin-right: calc(50vw - 188px);
+    }
+
+    to {
+        margin-left: calc(100vw - 188px);
         margin-right: 0;
     }
 }
