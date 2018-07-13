@@ -1,24 +1,22 @@
-// TIEA2120 Viikkotehtävä 4
-// Author: Mikael Myyrä
-
 "use strict";
 
-var numGradientBars = 10;
+const numGradientBars = 10;
 
-document.addEventListener('DOMContentLoaded', function () {
-    createGradientBars();
-    drawRabbit(); // Muista: piirto ei tapahdu heti, vaan vasta kun kuva on ladattu
-    drawScroller();
-    initScroller2();
-    window.requestAnimationFrame(animateScroller2);
-    window.requestAnimationFrame(animateSnowflakes);
-});
-
+class vt4 {
+    public static main(): void {
+        createGradients();
+        drawRabbit(); // Muista: piirto ei tapahdu heti, vaan vasta kun kuva on ladattu
+        drawScroller();
+        initScroller2();
+        window.requestAnimationFrame(animateScroller2);
+        window.requestAnimationFrame(animateSnowflakes);
+    }
+}
 
 //#region Bars, owl and rabbit
 
 // Luo ylös ja alas liikkuvat palkit
-function createGradientBars() {
+function createGradients(): void {
     let area = document.getElementById('barContainer');
 
     // Aika, jonka välein laitetaan uusi palkki menemään
@@ -128,7 +126,7 @@ function drawStretched(src, target, time) {
 
 //#region Scroller 1
 
-var scrollerText = 'TIEA212 Web-käyttöliittymien ohjelmointi -kurssin viikkotehtävä 4 taso 3 edellyttää tämännäköistä sivua';
+const scrollerText = 'TIEA212 Web-käyttöliittymien ohjelmointi -kurssin viikkotehtävä 4 taso 3 edellyttää tämännäköistä sivua';
 
 // Piirtää tekstin skrollerin lähdecanvakselle
 function drawScroller() {
@@ -162,7 +160,7 @@ function drawScroller() {
 
 //#region Scroller 2
 
-var scroller2font = '35px serif';
+const scroller2font = '35px serif';
 
 // Asettaa toiselle skrollerille järkevät mittasuhteet
 function initScroller2() {
@@ -179,7 +177,7 @@ function initScroller2() {
 }
 
 // Skrollerin animaation kontrollimuuttujat
-var params = {
+const params = {
     "XIntensity": 0, // sivuttaisliikkeen suuruus
     "XFreq": 1, // sivuttaisliikkeen nopeus
     "YFreq": 1, // pystyliikkeen nopeus
@@ -238,8 +236,8 @@ function onScrollerLoop() {
 
 //#region Snowflakes
 
-var prevSpawnTime = 0; // Viimeisimmän hiutaleen luontiaika
-var spawnInterval = 250; // Aika, jonka välein luodaan uusi hiutale
+let prevSpawnTime = 0; // Viimeisimmän hiutaleen luontiaika
+let spawnInterval = 250; // Aika, jonka välein luodaan uusi hiutale
 
 // Päivittää lumihiutaleiden tilanteen
 function animateSnowflakes(time) {
@@ -256,10 +254,10 @@ function animateSnowflakes(time) {
 
 // Tallennetaan kaikki hiutaleet taulukkoon x-koordinaatin mukaan. Näin voidaan
 // nopeasti löytää sellaiset hiutaleet, jotka saattavat olla toisen alla
-var flakes = [[]];
+let flakes = [[]];
 // Törmäysten tutkimiseen käytettävät luvut, todelliset ovat eri
-var flakeWidth = 20;
-var flakeHeight = 22;
+let flakeWidth = 20;
+let flakeHeight = 22;
 
 // Luo uuden lumihiutaleen
 function spawnSnowflake() {
@@ -312,3 +310,7 @@ function checkSnowflakeHeights() {
         }
     }
 }
+
+window.onload = () => {
+    vt4.main();
+};
