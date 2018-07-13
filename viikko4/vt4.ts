@@ -1,13 +1,15 @@
 'use strict';
 
-const gradients: number = 10;
-const svgns: string = 'http://www.w3.org/2000/svg';
+const gradients: number = 10,
+    svgns: string = 'http://www.w3.org/2000/svg',
+    taso3text: string = `TIEA212 Web-käyttöliittymien ohjelmointi -kurssin viikkotehtävä 4 taso 3 edellyttää tämännäköistä sivua`;
 
 class vt4 {
     public static main(): void {
         createGradients();
         setHandlers();
         Objects.rabbit();
+        Scroller.basic();
     }
 }
 
@@ -20,7 +22,7 @@ function createGradients(): void {
     }
 }
 
-function setHandlers():void {
+function setHandlers(): void {
     document.getElementById("owlButton")!.onclick = () => {
         Objects.owl();
     }
@@ -75,9 +77,9 @@ class Objects {
      * Initializes the rabbit
      */
     static rabbit(): void {
-        const left:HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('rabbitLeft'),
+        const left: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('rabbitLeft'),
             leftCtx: CanvasRenderingContext2D = <CanvasRenderingContext2D>left.getContext('2d'),
-            right:HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('rabbitRight'),
+            right: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('rabbitRight'),
             rightCtx: CanvasRenderingContext2D = <CanvasRenderingContext2D>right.getContext('2d'),
             img: HTMLImageElement = <HTMLImageElement>document.getElementById('rabbitIMG');
         console.log(img);
@@ -92,14 +94,41 @@ class Objects {
     /**
      * Creates an owl
      */
-    static owl():void {
+    static owl(): void {
         const area = document.getElementById('owlContainer')!,
-            owl:HTMLObjectElement = <HTMLObjectElement>area.children[0].cloneNode(true),
+            owl: HTMLObjectElement = <HTMLObjectElement>area.children[0].cloneNode(true),
             funcs = ['ease', 'ease-in', 'ease-out', 'ease-in-out', 'linear', 'step-start', 'step-end'],
             index = Math.floor(Math.random() * funcs.length);
         owl.style.animationTimingFunction = funcs[index];
         if (area.children.length % 2 === 1) owl.style.animationDirection = 'reverse';
         area.appendChild(owl);
+    }
+}
+
+class Scroller {
+    private static textXpos: number = window.innerWidth;
+
+    static basic(): void {
+        requestAnimationFrame(Scroller.scroll);
+    }
+
+    static scroll(timestamp: number) {
+        const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('scroller'),
+            ctx: CanvasRenderingContext2D = <CanvasRenderingContext2D>canvas.getContext('2d'),
+            gradient = ctx.createLinearGradient(0, -20, 0, canvas.height);
+        canvas.height = 200;
+        canvas.width = window.innerWidth;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, 'black');
+        gradient.addColorStop(0.5, 'yellow');
+        gradient.addColorStop(1, 'black');
+        ctx.font = `${canvas.height}px sans-serif`;
+        ctx.fillStyle = gradient;
+        ctx.textBaseline = 'hanging';
+        Scroller.textXpos -= 5;
+        if (Scroller.textXpos <= -(ctx.measureText(taso3text).width)) Scroller.textXpos = window.innerWidth;
+        ctx.fillText(taso3text, Scroller.textXpos, 0);
+        requestAnimationFrame(Scroller.scroll);
     }
 }
 

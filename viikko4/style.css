@@ -119,9 +119,14 @@ bar moving from right to left
 
 #scrollerContainer {
     position: fixed;
-    left: 100%;
+    left: 0;
+    width:100%;
     bottom: 2%;
-    animation: 90s infinite linear scroll-text;
+}
+
+#scroller {
+    width:100%;
+    z-index: 5;
 }
 
 #scrollerContainer2 {
