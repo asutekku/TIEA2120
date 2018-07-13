@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
 const gradients: number = 10,
-    svgns: string = 'http://www.w3.org/2000/svg',
+    svgns: string = "http://www.w3.org/2000/svg",
     taso3text: string = `TIEA212 Web-käyttöliittymien ohjelmointi -kurssin viikkotehtävä 4 taso 3 edellyttää tämännäköistä sivua`;
 
 class vt4 {
@@ -9,12 +9,16 @@ class vt4 {
         createGradients();
         setHandlers();
         Objects.rabbit();
+
         Scroller.basic();
+        //initScroller2();
+        //window.requestAnimationFrame(animateScroller2);
+        //window.requestAnimationFrame(animateSnowflakes);
     }
 }
 
 function createGradients(): void {
-    const area: HTMLElement = document.getElementById('barContainer')!;
+    const area: HTMLElement = document.getElementById("barContainer")!;
     const interval = 2000 / gradients;
     for (let i = 0; i < gradients; i++) {
         const bar: SVGSVGElement = SVG.gradientBar(interval * i);
@@ -25,51 +29,50 @@ function createGradients(): void {
 function setHandlers(): void {
     document.getElementById("owlButton")!.onclick = () => {
         Objects.owl();
-    }
+    };
 }
 
 /**
  * Class for SVG drawing
  */
 class SVG {
-
     /**
      * Creates gradient bar with additional delay parameter
      * @param {number} delay
      * @returns {SVGSVGElement}
      */
     static gradientBar(delay?: number): SVGSVGElement {
-        const svg: SVGSVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
-            defs: Element = document.createElementNS(svgns, 'defs'),
-            grad: Element = document.createElementNS(svgns, 'linearGradient'),
-            rect: Element = document.createElementNS(svgns, 'rect'),
+        const svg: SVGSVGElement = document.createElementNS("http://www.w3.org/2000/svg", "svg"),
+            defs: Element = document.createElementNS(svgns, "defs"),
+            grad: Element = document.createElementNS(svgns, "linearGradient"),
+            rect: Element = document.createElementNS(svgns, "rect"),
             stops = [
-                {'color': '#000000', 'offset': '0%'},
-                {'color': '#206DFF', 'offset': '50%'},
-                {'color': '#000000', 'offset': '100%'}];
+                {color: "#000000", offset: "0%"},
+                {color: "#206DFF", offset: "50%"},
+                {color: "#000000", offset: "100%"}
+            ];
         stops.forEach(e => {
-            const stop: Element = document.createElementNS(svgns, 'stop');
-            stop.setAttribute('offset', e.offset);
-            stop.setAttribute('stop-color', e.color);
+            const stop: Element = document.createElementNS(svgns, "stop");
+            stop.setAttribute("offset", e.offset);
+            stop.setAttribute("stop-color", e.color);
             grad.appendChild(stop);
         });
-        grad.id = 'gradientBar';
-        grad.setAttribute('x1', '0');
-        grad.setAttribute('x2', '1');
-        grad.setAttribute('y1', '0');
-        grad.setAttribute('y2', '0');
+        grad.id = "gradientBar";
+        grad.setAttribute("x1", "0");
+        grad.setAttribute("x2", "1");
+        grad.setAttribute("y1", "0");
+        grad.setAttribute("y2", "0");
         defs.appendChild(grad);
-        rect.setAttribute('fill', 'url(#gradientBar)');
-        rect.setAttribute('width', '100%');
-        rect.setAttribute('height', '100%');
+        rect.setAttribute("fill", "url(#gradientBar)");
+        rect.setAttribute("width", "100%");
+        rect.setAttribute("height", "100%");
         svg.appendChild(defs);
         svg.appendChild(rect);
-        svg.classList.add('gradientBar');
-        svg.setAttribute('type', 'image/svg+xml');
+        svg.classList.add("gradientBar");
+        svg.setAttribute("type", "image/svg+xml");
         if (delay) svg.style.animationDelay = `${delay}ms`;
         return svg;
     }
-
 }
 
 class Objects {
@@ -77,11 +80,11 @@ class Objects {
      * Initializes the rabbit
      */
     static rabbit(): void {
-        const left: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('rabbitLeft'),
-            leftCtx: CanvasRenderingContext2D = <CanvasRenderingContext2D>left.getContext('2d'),
-            right: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('rabbitRight'),
-            rightCtx: CanvasRenderingContext2D = <CanvasRenderingContext2D>right.getContext('2d'),
-            img: HTMLImageElement = <HTMLImageElement>document.getElementById('rabbitIMG');
+        const left: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("rabbitLeft"),
+            leftCtx: CanvasRenderingContext2D = <CanvasRenderingContext2D>left.getContext("2d"),
+            right: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("rabbitRight"),
+            rightCtx: CanvasRenderingContext2D = <CanvasRenderingContext2D>right.getContext("2d"),
+            img: HTMLImageElement = <HTMLImageElement>document.getElementById("rabbitIMG");
         console.log(img);
         left.width = img.width / 2;
         left.height = img.height * 2;
@@ -89,19 +92,72 @@ class Objects {
         right.height = img.height * 2;
         leftCtx.drawImage(img, 0, 0, left.width, left.height, 0, 0, left.width, left.height);
         rightCtx.drawImage(img, right.width, 0, right.width, right.height, 0, 0, right.width, right.height);
+        Effects.wavy();
     }
 
     /**
      * Creates an owl
      */
     static owl(): void {
-        const area = document.getElementById('owlContainer')!,
+        const area = document.getElementById("owlContainer")!,
             owl: HTMLObjectElement = <HTMLObjectElement>area.children[0].cloneNode(true),
-            funcs = ['ease', 'ease-in', 'ease-out', 'ease-in-out', 'linear', 'step-start', 'step-end'],
+            funcs = ["ease", "ease-in", "ease-out", "ease-in-out", "linear", "step-start", "step-end"],
             index = Math.floor(Math.random() * funcs.length);
         owl.style.animationTimingFunction = funcs[index];
-        if (area.children.length % 2 === 1) owl.style.animationDirection = 'reverse';
+        if (area.children.length % 2 === 1) owl.style.animationDirection = "reverse";
         area.appendChild(owl);
+    }
+}
+
+class Effects {
+    private static args: any = {};
+
+    static wavy() {
+        Effects.args.img = <HTMLImageElement>document.getElementById("rabbitIMG");
+        Effects.args.canvas = <HTMLCanvasElement>document.getElementById("rabbitLeft");
+        Effects.args.canvas2 = <HTMLCanvasElement>document.getElementById("rabbitRight");
+        Effects.args.ctx = Effects.args.canvas.getContext("2d")!;
+        Effects.args.ctx2 = Effects.args.canvas2.getContext("2d")!;
+        Effects.args.width = Effects.args.canvas.width;
+        Effects.args.height = Effects.args.canvas.height;
+        Effects.args.o1 = new Oscillator(0.05);
+        Effects.args.o2 = new Oscillator(0.03);
+        Effects.args.o3 = new Oscillator(0.06);
+        Effects.args.y0 = 0;
+        Effects.args.y1 = Effects.args.height * 0.25;
+        Effects.args.y2 = Effects.args.height * 0.5;
+        Effects.args.y3 = Effects.args.height * 0.75;
+        Effects.args.y4 = Effects.args.height;
+        requestAnimationFrame(this.waveEffect);
+    }
+
+    private static waveEffect = () => {
+        const args = Effects.args;
+        args.ctx.clearRect(0, 0, args.width, args.height);
+        args.ctx2.clearRect(0, 0, args.width, args.height);
+        for (let x = 0; x < args.height; x++) {
+            const ly1 = args.y1 + args.o1.current(x * 0.2) * 3,
+                ly2 = args.y2 + args.o2.current(x * 0.2) * 3,
+                h0 = ly1,
+                h1 = ly2 - ly1;
+            args.ctx.drawImage(args.img, x, args.y0, 1, args.y1, x, 0, 1, h0);
+            args.ctx.drawImage(args.img, x, args.y1, 1, args.y2 - args.y1, x, ly1 - 0.5, 1, h1);
+            args.ctx2.drawImage(args.img, x + args.img.width / 2, args.y0, 1, args.y1, x, 0, 1, h0);
+            args.ctx2.drawImage(args.img, x + args.img.width / 2, args.y1, 1, args.y2 - args.y1, x, ly1 - 0.5, 1, h1);
+        }
+        requestAnimationFrame(Effects.waveEffect);
+    };
+}
+
+class Oscillator {
+    current: (x: number) => number;
+
+    constructor(speed: number) {
+        let frame = 0;
+        this.current = function (x: number) {
+            frame += 0.002 * speed;
+            return Math.sin(frame + x / 2 * speed * 10);
+        };
     }
 }
 
@@ -112,26 +168,183 @@ class Scroller {
         requestAnimationFrame(Scroller.scroll);
     }
 
-    static scroll(timestamp: number) {
-        const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('scroller'),
-            ctx: CanvasRenderingContext2D = <CanvasRenderingContext2D>canvas.getContext('2d'),
+    static scroll = () => {
+        const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("scroller"),
+            ctx: CanvasRenderingContext2D = <CanvasRenderingContext2D>canvas.getContext("2d"),
             gradient = ctx.createLinearGradient(0, -20, 0, canvas.height);
         canvas.height = 200;
         canvas.width = window.innerWidth;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, 'black');
-        gradient.addColorStop(0.5, 'yellow');
-        gradient.addColorStop(1, 'black');
+        gradient.addColorStop(0, "black");
+        gradient.addColorStop(0.5, "yellow");
+        gradient.addColorStop(1, "black");
         ctx.font = `${canvas.height}px sans-serif`;
         ctx.fillStyle = gradient;
-        ctx.textBaseline = 'hanging';
+        ctx.textBaseline = "hanging";
         Scroller.textXpos -= 5;
-        if (Scroller.textXpos <= -(ctx.measureText(taso3text).width)) Scroller.textXpos = window.innerWidth;
+        if (Scroller.textXpos <= -ctx.measureText(taso3text).width) Scroller.textXpos = window.innerWidth;
         ctx.fillText(taso3text, Scroller.textXpos, 0);
         requestAnimationFrame(Scroller.scroll);
-    }
+    };
 }
 
+//#endregion
+
+/*
+
+//#region Scroller 2
+
+const scroller2font = '35px serif';
+
+// Asettaa toiselle skrollerille järkevät mittasuhteet
+function initScroller2() {
+    let canvas = document.getElementById('scroller2');
+    let ctx = canvas.getContext('2d');
+
+    canvas.height = 150;
+
+    ctx.font = '35px serif';
+    canvas.width = ctx.measureText(scrollerText).width + 800; // lisätilaa sivuttaisliikkeelle
+
+    // Kuuntelija, joka arpoo animaation
+    canvas.parentElement.addEventListener('animationiteration', onScrollerLoop);
+}
+
+// Skrollerin animaation kontrollimuuttujat
+const params = {
+    'XIntensity': 0, // sivuttaisliikkeen suuruus
+    'XFreq': 1, // sivuttaisliikkeen nopeus
+    'YFreq': 1, // pystyliikkeen nopeus
+    'XWL': 1, // sivuttaisliikkeen aallonpituus
+    'YWL': 1 // pystyliikkeen aallonpituus
+}
+
+// Päivittää toisen skrollerin animaation.
+function animateScroller2(time) {
+    let canvas = document.getElementById('scroller2');
+    let ctx = canvas.getContext('2d');
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = 'White';
+    ctx.font = scroller2font;
+    ctx.textBaseline = 'middle';
+
+    // Piirretään teksti kirjain kerrallaan
+    let x = 400;
+    for (let i = 0; i < scrollerText.length; i++) {
+        let char = scrollerText.charAt(i);
+        ctx.fillText(char, x + xOffset(x), yOffset(x));
+        x += ctx.measureText(char).width;
+    }
+
+    function xOffset(xPos) {
+        return -Math.round(Math.cos(xPos / (50 * params['XWL']) + time * params['XFreq'] / 400) * params['XIntensity'] * 50);
+    }
+
+    function yOffset(xPos) {
+        let center = canvas.height / 2;
+        return Math.round(center + Math.sin((xPos / (50 * params['YWL']) + time * params['YFreq'] / 400)) * (center - 20));
+    }
+
+    window.requestAnimationFrame(animateScroller2);
+}
+
+// Arvotaan skrollerille satunnainen animaatio aina kun se alkaa alusta
+function onScrollerLoop() {
+    params['XIntensity'] = Math.random() * 5;
+    if (params['XIntensity'] < 0.75) {
+        // Mennään nollaan asti jos tämä on pieni, niin saadaan joskus
+        // perus siniaallon näköisiäkin animaatioita
+        params['XIntensity'] = 0;
+    }
+    params['XFreq'] = 1 + Math.random();
+    params['YFreq'] = 1 + Math.random();
+    // tämän pitää olla pitkä jos intensiteetti on iso, muuten näyttää liian sekavalta
+    params['XWL'] = params['XIntensity'] - 1 + Math.random() * 2;
+    params['YWL'] = 1 + Math.random() * 3;
+}
+
+//#endregion
+
+
+//#region Snowflakes
+
+let prevSpawnTime = 0; // Viimeisimmän hiutaleen luontiaika
+let spawnInterval = 250; // Aika, jonka välein luodaan uusi hiutale
+
+// Päivittää lumihiutaleiden tilanteen
+function animateSnowflakes(time) {
+    // Luodaan uusi jos aikaa on kulunut riittävästi
+    if (time - prevSpawnTime > spawnInterval) {
+        spawnSnowflake();
+        prevSpawnTime = time;
+    }
+
+    checkSnowflakeHeights();
+
+    window.requestAnimationFrame(animateSnowflakes);
+}
+
+// Tallennetaan kaikki hiutaleet taulukkoon x-koordinaatin mukaan. Näin voidaan
+// nopeasti löytää sellaiset hiutaleet, jotka saattavat olla toisen alla
+let flakes = [[]];
+// Törmäysten tutkimiseen käytettävät luvut, todelliset ovat eri
+let flakeWidth = 20;
+let flakeHeight = 22;
+
+// Luo uuden lumihiutaleen
+function spawnSnowflake() {
+    let area = document.getElementById('snowflakeContainer');
+
+    let template = document.getElementById('flakeTemplate');
+    let flake = template.cloneNode(true);
+    flake.id = '';
+
+    // Arvotaan x-koordinaatti ruudun alueelta
+    let x = Math.random() * (window.innerWidth - flakeWidth);
+    flake.style.left = x + 'px';
+    flake.x = x;
+
+    // Lasketaan, mille korkeudelle hiutaleen pitäisi laskeutua
+    flake.targetHeight = 0;
+    let index = Math.floor(x / flakeWidth);
+    for (let i = index - 1; i <= index + 1; i++) {
+        if (i > 0 && flakes[i]) {
+            for (let j in flakes[i]) {
+                if ((flakes[i][j].x + flakeWidth > flake.x) && (flakes[i][j].x < flake.x + flakeWidth)) {
+                    // hiutale on tämän alla, muutetaan kohdekorkeutta
+                    let height = flakes[i][j].targetHeight + flakeHeight;
+                    if (height > flake.targetHeight) {
+                        flake.targetHeight = height;
+                    }
+                }
+            }
+        }
+    }
+
+    // Laitetaan hiutale taulukkoon
+    if (!flakes[index]) {
+        flakes[index] = [];
+    }
+    flakes[index].push(flake);
+
+    area.appendChild(flake);
+}
+
+// Tarkistaa kaikkien lumihiutaleiden korkeudet ja pysäyttää sellaiset, jotka ovat riittävän matalalla
+function checkSnowflakeHeights() {
+    for (let flake of document.getElementsByClassName('snowflake')) {
+        let bottom = getComputedStyle(flake).bottom;
+        let h = parseFloat(bottom.slice(0, bottom.length - 2));
+        if (h <= flake.targetHeight) {
+            // ollaan pohjalla, animaatio pois ja oikealle korkeudelle
+            flake.style.animation = 'none';
+            flake.style.bottom = flake.targetHeight + 'px';
+        }
+    }
+}
+*/
 window.onload = () => {
     vt4.main();
 };
