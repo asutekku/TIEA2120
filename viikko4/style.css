@@ -1,5 +1,5 @@
-body {
-    background-color: black;
+html {
+    background: black;
 }
 
 .hidden {
@@ -7,7 +7,7 @@ body {
 }
 
 /**
-bar moving from right to left
+bar moving from right to left and vice versa
  */
 .gradientBar {
     width: 160px;
@@ -32,7 +32,6 @@ bar moving from right to left
 .owl {
     width: 100px;
     position: fixed;
-    margin-top: -50vh;
     z-index: 3;
     animation: 5s infinite linear owl-animation;
 }
@@ -151,20 +150,19 @@ bar moving from right to left
     position: fixed;
     bottom: 0;
     width: 40px;
-    z-index: 1500;
-    animation: 12s 1 linear snowfall;
+    z-index: 1;
+    animation-duration: 2s;
+    animation-iteration-count: 1;
+    animation-timing-function: linear;
+    animation-name: snowflake;
 }
 
-@keyframes snowfall {
-    from {
-        bottom: 110vh;
+@keyframes snowflake {
+    0% {
+        bottom: 100vh;
     }
 
-    to {
+    100% {
         bottom: 0;
     }
-}
-
-#flakeTemplate {
-    display: none;
 }

@@ -11,6 +11,7 @@ class vt4 {
         Objects.rabbit();
         Scroller.basic();
         SinScroll.init();
+        Snowflakes.create();
     }
 }
 
@@ -44,9 +45,12 @@ class SVG {
             grad: Element = document.createElementNS(svgns, "linearGradient"),
             rect: Element = document.createElementNS(svgns, "rect"),
             stops = [
-                {color: "#000000", offset: "0%"},
-                {color: "#206DFF", offset: "50%"},
-                {color: "#000000", offset: "100%"}
+                { color: "#000000", offset: "0%" },
+                { color: "#206DFF", offset: "50%" },
+                {
+                    color: "#000000",
+                    offset: "100%"
+                }
             ];
         stops.forEach(e => {
             const stop: Element = document.createElementNS(svgns, "stop");
@@ -108,6 +112,9 @@ class Objects {
 class Effects {
     private static args: any = {};
 
+    /**
+     * Sets the parameters for the wavy objects
+     */
     static wavy() {
         Effects.args.img = <HTMLImageElement>document.getElementById("rabbitIMG");
         Effects.args.canvas = <HTMLCanvasElement>document.getElementById("rabbitLeft");
@@ -118,43 +125,63 @@ class Effects {
         Effects.args.height = Effects.args.canvas.height;
         Effects.args.o1 = new Oscillator(0.05);
         Effects.args.o2 = new Oscillator(0.03);
-        Effects.args.o3 = new Oscillator(0.06);
         Effects.args.y0 = 0;
         Effects.args.y1 = Effects.args.height * 0.25;
         Effects.args.y2 = Effects.args.height * 0.5;
         requestAnimationFrame(this.waveEffect);
     }
 
+    /**
+     * Creates the wave effect for both of the bunnies
+     */
     private static waveEffect = () => {
         const args = Effects.args;
         args.ctx.clearRect(0, 0, args.width, args.height);
         args.ctx2.clearRect(0, 0, args.width, args.height);
-        for (let x = 0; x < args.height; x++) {
-            const ly1 = args.y1 + args.o1.current(x * 0.2) * 3,
-                ly2 = args.y2 + args.o2.current(x * 0.2) * 2,
+        for (let imageY = 0; imageY < args.height; imageY++) {
+            const ly1 = args.y1 + args.o1.current(0.2) * 100,
+                ly2 = args.y2 + args.o2.current(0.2) * 50,
                 h0 = ly1,
                 h1 = ly2 - ly1;
-            args.ctx.drawImage(args.img, x, args.y0, 1, args.y1, x, 0, 1, h0);
-            args.ctx.drawImage(args.img, x, args.y1, 1, args.y2 - args.y1, x, ly1 - 0.5, 1, h1);
-            args.ctx2.drawImage(args.img, x + args.img.width / 2, args.y0, 1, args.y1, x, 0, 1, h0);
-            args.ctx2.drawImage(args.img, x + args.img.width / 2, args.y1, 1, args.y2 - args.y1, x, ly1 - 0.5, 1, h1);
+            //Draws the images in two parts to hopefully improve performance
+            args.ctx.drawImage(args.img, imageY, args.y0, 5, args.y1, imageY, 0, 1, h0);
+            args.ctx.drawImage(args.img, imageY, args.y1, 5, args.y2 - args.y1, imageY, ly1 - 0.5, 1, h1);
+
+            args.ctx2.drawImage(args.img, imageY + args.img.width / 2, args.y0, 1, args.y1, imageY, 0, 1, h0);
+            args.ctx2.drawImage(
+                args.img,
+                imageY + args.img.width / 2,
+                args.y1,
+                1,
+                args.y2 - args.y1,
+                imageY,
+                ly1 - 0.5,
+                1,
+                h1
+            );
         }
         requestAnimationFrame(Effects.waveEffect);
     };
 }
 
+/**
+ * Oscillator, which oscillates the bunnies
+ */
 class Oscillator {
     current: (x: number) => number;
 
     constructor(speed: number) {
         let frame = 0;
-        this.current = function (x: number) {
-            frame += 0.002 * speed;
-            return Math.sin(frame + x / 2 * speed * 10);
+        this.current = function(x: number) {
+            frame += 0.0001 * speed;
+            return Math.sin((frame + x) * 2);
         };
     }
 }
 
+/**
+ * Class for the basic scrolling text
+ */
 class Scroller {
     private static textXpos: number = window.innerWidth;
 
@@ -182,6 +209,9 @@ class Scroller {
     };
 }
 
+/**
+ * Class for the sinus scroll
+ */
 class SinScroll {
     private static charX: number = window.innerWidth;
     private static text: string = taso3text;
@@ -204,10 +234,16 @@ class SinScroll {
         requestAnimationFrame(SinScroll.scrollSinus);
     }
 
+    /**
+     * Randomizes velocity each time the text passes the screen
+     */
     static randomizeParams = () => {
         SinScroll.velocity = Math.floor(Math.random() * 100) / 400;
     };
 
+    /**
+     * Animation for the sinus scroll
+     */
     private static scrollSinus = () => {
         SinScroll.canvas.height = 250;
         SinScroll.canvas.width = window.innerWidth;
@@ -222,6 +258,9 @@ class SinScroll {
         requestAnimationFrame(SinScroll.scrollSinus);
     };
 
+    /**
+     * Calculates the y values for each letter
+     */
     private static calcWave(): void {
         SinScroll.theta += SinScroll.velocity;
         let x = SinScroll.theta;
@@ -231,14 +270,22 @@ class SinScroll {
         }
     }
 
+    /**
+     * Draws the wave letter by letter
+     */
     static drawWave() {
         let x = SinScroll.theta;
         for (let i: number = 0; i < SinScroll.text.length; i++) {
             SinScroll.renderChar(i, x);
-            x += SinScroll.dx+Math.sin(SinScroll.velocity*x);
+            x += SinScroll.dx + Math.sin(SinScroll.velocity * x);
         }
     }
 
+    /**
+     * Renders single character by index of the sentence
+     * @param {number} index
+     * @param {number} modifier
+     */
     static renderChar(index: number, modifier: number): void {
         SinScroll.ctx.fillStyle = "White";
         SinScroll.ctx.font = SinScroll.font2;
@@ -246,6 +293,78 @@ class SinScroll {
         const xPos: number = index * (this.xSpacing * 2) + Math.sin(modifier) * SinScroll.amplitude + SinScroll.charX;
         const yPos: number = SinScroll.yValues[index] * 2 + SinScroll.canvas.height / 2;
         SinScroll.ctx.fillText(SinScroll.text[index], xPos, yPos);
+    }
+}
+
+/**
+ * Class for the falling snowflakes
+ */
+class Snowflakes {
+    private static div: HTMLDivElement;
+    private static flake: HTMLObjectElement;
+    private static spawnInterval: number = 250;
+    private static lastSpawn: number = 0;
+    private static falling: any[] = [];
+
+    static create = () => {
+        Snowflakes.div = <HTMLDivElement>document.getElementById("snowflakeContainer");
+        Snowflakes.flake = <HTMLObjectElement>document.getElementById("snowflakeSVG");
+        requestAnimationFrame(Snowflakes.snowflakeAnimate);
+    };
+
+    /**
+     * Spawns new snowflake each 0.25 seconds
+     * @param {number} callback
+     */
+    static snowflakeAnimate = (callback: number) => {
+        if (callback - Snowflakes.lastSpawn > Snowflakes.spawnInterval) {
+            Snowflakes.createSnowflake();
+            Snowflakes.lastSpawn = callback;
+        }
+        Snowflakes.checkFalling();
+        requestAnimationFrame(Snowflakes.snowflakeAnimate);
+    };
+
+    /**
+     * Checks the falling snowflakes and removes their animation if they are in position
+     */
+    static checkFalling(): void {
+        Snowflakes.falling.forEach((e, i, o) => {
+            const xPos: number = parseInt(window.getComputedStyle(e).bottom!);
+            if (xPos + 26 <= parseInt(e.style.marginBottom)) {
+                e.style.animation = "none";
+                o.splice(i, 1);
+            }
+        });
+    }
+
+    /**
+     * Creates falling snowflakes
+     * Checks the margin-bottom of the elements that are in the dom
+     * and then evaluates what their margin-bottom should be
+     */
+    static createSnowflake(): void {
+        const flakeElement = <HTMLElement>Snowflakes.flake.cloneNode(true),
+            xPos: number = Math.floor(Math.random() * window.innerWidth),
+            flakes = Array.from(document.getElementsByClassName("snowflakeSpawned"));
+        if (flakes.length !== 0) {
+            const xCount = flakes.filter(e => {
+                const pre = parseInt((e as HTMLElement).style.marginLeft!);
+                return xPos < pre + 20 && xPos > pre - 20;
+            });
+            if (xCount.length !== 0) {
+                const highest: number = xCount.reduce((l: number, e) => {
+                    const height: number = parseInt((e as HTMLElement).style.marginBottom!);
+                    return height > l ? height : l;
+                }, 0);
+                flakeElement.style.marginBottom = `${highest + 26}px`;
+            }
+        }
+        flakeElement.setAttribute("id", "");
+        flakeElement.style.marginLeft = `${xPos}px`;
+        flakeElement.classList.add("snowflakeSpawned");
+        Snowflakes.falling.push(flakeElement);
+        Snowflakes.div.appendChild(flakeElement);
     }
 }
 
