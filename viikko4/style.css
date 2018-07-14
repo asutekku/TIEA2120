@@ -73,10 +73,6 @@ bar moving from right to left
     z-index: 12;
 }
 
-.rabbitContainer {
-    width: 100vw;
-    height:100vh;
-}
 
 .rabbit {
     position: fixed;
@@ -84,18 +80,18 @@ bar moving from right to left
 }
 
 #rabbitLeft {
-    height: 200vh;
+    height: 2000px;
     animation: 5s infinite alternate ease rabbit-slide-left;
 }
 
 #rabbitRight {
-    height: 200vh;
+    height: 2000px;
     animation: 5s infinite alternate ease rabbit-slide-right;
 }
 
 @keyframes rabbit-slide-left {
     from {
-        margin-left: calc(50vw);
+        margin-left: calc(50vw - 318px);
     }
 
     to {
@@ -105,11 +101,11 @@ bar moving from right to left
 
 @keyframes rabbit-slide-right {
     from {
-        margin-left: 50%;
+        margin-left: calc(50vw);
     }
 
     to {
-        margin-left: 100%;
+        margin-left: calc(100vw  - 318px);
     }
 }
 
@@ -135,9 +131,8 @@ bar moving from right to left
 
 #scrollerContainer2 {
     position: fixed;
-    top: 3%;
-    left: 100%;
-    animation: 10s infinite linear scroll-text;
+    top: 0px;
+    width: 100%;
 }
 
 @keyframes scroll-text {

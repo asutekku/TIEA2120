@@ -9,11 +9,8 @@ class vt4 {
         createGradients();
         setHandlers();
         Objects.rabbit();
-
         Scroller.basic();
-        //initScroller2();
-        //window.requestAnimationFrame(animateScroller2);
-        //window.requestAnimationFrame(animateSnowflakes);
+        SinScroll.init();
     }
 }
 
@@ -85,7 +82,6 @@ class Objects {
             right: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("rabbitRight"),
             rightCtx: CanvasRenderingContext2D = <CanvasRenderingContext2D>right.getContext("2d"),
             img: HTMLImageElement = <HTMLImageElement>document.getElementById("rabbitIMG");
-        console.log(img);
         left.width = img.width / 2;
         left.height = img.height * 2;
         right.width = img.width / 2;
@@ -126,8 +122,6 @@ class Effects {
         Effects.args.y0 = 0;
         Effects.args.y1 = Effects.args.height * 0.25;
         Effects.args.y2 = Effects.args.height * 0.5;
-        Effects.args.y3 = Effects.args.height * 0.75;
-        Effects.args.y4 = Effects.args.height;
         requestAnimationFrame(this.waveEffect);
     }
 
@@ -137,7 +131,7 @@ class Effects {
         args.ctx2.clearRect(0, 0, args.width, args.height);
         for (let x = 0; x < args.height; x++) {
             const ly1 = args.y1 + args.o1.current(x * 0.2) * 3,
-                ly2 = args.y2 + args.o2.current(x * 0.2) * 3,
+                ly2 = args.y2 + args.o2.current(x * 0.2) * 2,
                 h0 = ly1,
                 h1 = ly2 - ly1;
             args.ctx.drawImage(args.img, x, args.y0, 1, args.y1, x, 0, 1, h0);
@@ -165,11 +159,11 @@ class Scroller {
     private static textXpos: number = window.innerWidth;
 
     static basic(): void {
-        requestAnimationFrame(Scroller.scroll);
+        requestAnimationFrame(Scroller.scrollBasic);
     }
 
-    static scroll = () => {
-        const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("scroller"),
+    static scrollBasic = () => {
+        const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById("basicScroller"),
             ctx: CanvasRenderingContext2D = <CanvasRenderingContext2D>canvas.getContext("2d"),
             gradient = ctx.createLinearGradient(0, -20, 0, canvas.height);
         canvas.height = 200;
@@ -184,167 +178,77 @@ class Scroller {
         Scroller.textXpos -= 5;
         if (Scroller.textXpos <= -ctx.measureText(taso3text).width) Scroller.textXpos = window.innerWidth;
         ctx.fillText(taso3text, Scroller.textXpos, 0);
-        requestAnimationFrame(Scroller.scroll);
+        requestAnimationFrame(Scroller.scrollBasic);
     };
 }
 
-//#endregion
+class SinScroll {
+    private static charX: number = window.innerWidth;
+    private static text: string = taso3text;
+    private static font2: string = "40px serif";
+    private static theta: number = 0.0;
+    private static yValues: number[];
+    private static amplitude: number = 40;
+    private static velocity: number = 0.05;
+    private static dx: number;
+    private static xSpacing: number = 15;
 
-/*
+    private static canvas: HTMLCanvasElement;
+    private static ctx: CanvasRenderingContext2D;
 
-//#region Scroller 2
-
-const scroller2font = '35px serif';
-
-// Asettaa toiselle skrollerille järkevät mittasuhteet
-function initScroller2() {
-    let canvas = document.getElementById('scroller2');
-    let ctx = canvas.getContext('2d');
-
-    canvas.height = 150;
-
-    ctx.font = '35px serif';
-    canvas.width = ctx.measureText(scrollerText).width + 800; // lisätilaa sivuttaisliikkeelle
-
-    // Kuuntelija, joka arpoo animaation
-    canvas.parentElement.addEventListener('animationiteration', onScrollerLoop);
-}
-
-// Skrollerin animaation kontrollimuuttujat
-const params = {
-    'XIntensity': 0, // sivuttaisliikkeen suuruus
-    'XFreq': 1, // sivuttaisliikkeen nopeus
-    'YFreq': 1, // pystyliikkeen nopeus
-    'XWL': 1, // sivuttaisliikkeen aallonpituus
-    'YWL': 1 // pystyliikkeen aallonpituus
-}
-
-// Päivittää toisen skrollerin animaation.
-function animateScroller2(time) {
-    let canvas = document.getElementById('scroller2');
-    let ctx = canvas.getContext('2d');
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = 'White';
-    ctx.font = scroller2font;
-    ctx.textBaseline = 'middle';
-
-    // Piirretään teksti kirjain kerrallaan
-    let x = 400;
-    for (let i = 0; i < scrollerText.length; i++) {
-        let char = scrollerText.charAt(i);
-        ctx.fillText(char, x + xOffset(x), yOffset(x));
-        x += ctx.measureText(char).width;
+    static init(): void {
+        SinScroll.canvas = <HTMLCanvasElement>document.getElementById("sinusScroller");
+        SinScroll.ctx = <CanvasRenderingContext2D>SinScroll.canvas.getContext("2d");
+        SinScroll.yValues = new Array(SinScroll.text.length);
+        SinScroll.dx = 2 * Math.PI / SinScroll.canvas.width * SinScroll.xSpacing;
+        requestAnimationFrame(SinScroll.scrollSinus);
     }
 
-    function xOffset(xPos) {
-        return -Math.round(Math.cos(xPos / (50 * params['XWL']) + time * params['XFreq'] / 400) * params['XIntensity'] * 50);
-    }
+    static randomizeParams = () => {
+        SinScroll.velocity = Math.floor(Math.random() * 100) / 400;
+    };
 
-    function yOffset(xPos) {
-        let center = canvas.height / 2;
-        return Math.round(center + Math.sin((xPos / (50 * params['YWL']) + time * params['YFreq'] / 400)) * (center - 20));
-    }
+    private static scrollSinus = () => {
+        SinScroll.canvas.height = 250;
+        SinScroll.canvas.width = window.innerWidth;
+        SinScroll.ctx.font = SinScroll.font2;
+        SinScroll.charX -= 10;
+        SinScroll.calcWave();
+        SinScroll.drawWave();
+        if (SinScroll.charX <= -(SinScroll.text.length * SinScroll.xSpacing * 2)) {
+            SinScroll.charX = window.innerWidth;
+            SinScroll.randomizeParams();
+        }
+        requestAnimationFrame(SinScroll.scrollSinus);
+    };
 
-    window.requestAnimationFrame(animateScroller2);
-}
-
-// Arvotaan skrollerille satunnainen animaatio aina kun se alkaa alusta
-function onScrollerLoop() {
-    params['XIntensity'] = Math.random() * 5;
-    if (params['XIntensity'] < 0.75) {
-        // Mennään nollaan asti jos tämä on pieni, niin saadaan joskus
-        // perus siniaallon näköisiäkin animaatioita
-        params['XIntensity'] = 0;
-    }
-    params['XFreq'] = 1 + Math.random();
-    params['YFreq'] = 1 + Math.random();
-    // tämän pitää olla pitkä jos intensiteetti on iso, muuten näyttää liian sekavalta
-    params['XWL'] = params['XIntensity'] - 1 + Math.random() * 2;
-    params['YWL'] = 1 + Math.random() * 3;
-}
-
-//#endregion
-
-
-//#region Snowflakes
-
-let prevSpawnTime = 0; // Viimeisimmän hiutaleen luontiaika
-let spawnInterval = 250; // Aika, jonka välein luodaan uusi hiutale
-
-// Päivittää lumihiutaleiden tilanteen
-function animateSnowflakes(time) {
-    // Luodaan uusi jos aikaa on kulunut riittävästi
-    if (time - prevSpawnTime > spawnInterval) {
-        spawnSnowflake();
-        prevSpawnTime = time;
-    }
-
-    checkSnowflakeHeights();
-
-    window.requestAnimationFrame(animateSnowflakes);
-}
-
-// Tallennetaan kaikki hiutaleet taulukkoon x-koordinaatin mukaan. Näin voidaan
-// nopeasti löytää sellaiset hiutaleet, jotka saattavat olla toisen alla
-let flakes = [[]];
-// Törmäysten tutkimiseen käytettävät luvut, todelliset ovat eri
-let flakeWidth = 20;
-let flakeHeight = 22;
-
-// Luo uuden lumihiutaleen
-function spawnSnowflake() {
-    let area = document.getElementById('snowflakeContainer');
-
-    let template = document.getElementById('flakeTemplate');
-    let flake = template.cloneNode(true);
-    flake.id = '';
-
-    // Arvotaan x-koordinaatti ruudun alueelta
-    let x = Math.random() * (window.innerWidth - flakeWidth);
-    flake.style.left = x + 'px';
-    flake.x = x;
-
-    // Lasketaan, mille korkeudelle hiutaleen pitäisi laskeutua
-    flake.targetHeight = 0;
-    let index = Math.floor(x / flakeWidth);
-    for (let i = index - 1; i <= index + 1; i++) {
-        if (i > 0 && flakes[i]) {
-            for (let j in flakes[i]) {
-                if ((flakes[i][j].x + flakeWidth > flake.x) && (flakes[i][j].x < flake.x + flakeWidth)) {
-                    // hiutale on tämän alla, muutetaan kohdekorkeutta
-                    let height = flakes[i][j].targetHeight + flakeHeight;
-                    if (height > flake.targetHeight) {
-                        flake.targetHeight = height;
-                    }
-                }
-            }
+    private static calcWave(): void {
+        SinScroll.theta += SinScroll.velocity;
+        let x = SinScroll.theta;
+        for (let i = 0; i < SinScroll.yValues.length; i++) {
+            SinScroll.yValues[i] = Math.sin(x) * SinScroll.amplitude;
+            x += SinScroll.dx;
         }
     }
 
-    // Laitetaan hiutale taulukkoon
-    if (!flakes[index]) {
-        flakes[index] = [];
-    }
-    flakes[index].push(flake);
-
-    area.appendChild(flake);
-}
-
-// Tarkistaa kaikkien lumihiutaleiden korkeudet ja pysäyttää sellaiset, jotka ovat riittävän matalalla
-function checkSnowflakeHeights() {
-    for (let flake of document.getElementsByClassName('snowflake')) {
-        let bottom = getComputedStyle(flake).bottom;
-        let h = parseFloat(bottom.slice(0, bottom.length - 2));
-        if (h <= flake.targetHeight) {
-            // ollaan pohjalla, animaatio pois ja oikealle korkeudelle
-            flake.style.animation = 'none';
-            flake.style.bottom = flake.targetHeight + 'px';
+    static drawWave() {
+        let x = SinScroll.theta;
+        for (let i: number = 0; i < SinScroll.text.length; i++) {
+            SinScroll.renderChar(i, x);
+            x += SinScroll.dx+Math.sin(SinScroll.velocity*x);
         }
     }
+
+    static renderChar(index: number, modifier: number): void {
+        SinScroll.ctx.fillStyle = "White";
+        SinScroll.ctx.font = SinScroll.font2;
+        SinScroll.ctx.textBaseline = "hanging";
+        const xPos: number = index * (this.xSpacing * 2) + Math.sin(modifier) * SinScroll.amplitude + SinScroll.charX;
+        const yPos: number = SinScroll.yValues[index] * 2 + SinScroll.canvas.height / 2;
+        SinScroll.ctx.fillText(SinScroll.text[index], xPos, yPos);
+    }
 }
-*/
+
 window.onload = () => {
     vt4.main();
 };
