@@ -45,8 +45,8 @@ class SVG {
             grad: Element = document.createElementNS(svgns, "linearGradient"),
             rect: Element = document.createElementNS(svgns, "rect"),
             stops = [
-                { color: "#000000", offset: "0%" },
-                { color: "#206DFF", offset: "50%" },
+                {color: "#000000", offset: "0%"},
+                {color: "#206DFF", offset: "50%"},
                 {
                     color: "#000000",
                     offset: "100%"
@@ -125,9 +125,12 @@ class Effects {
         Effects.args.height = Effects.args.canvas.height;
         Effects.args.o1 = new Oscillator(0.05);
         Effects.args.o2 = new Oscillator(0.03);
+        Effects.args.o3 = new Oscillator(0.06);
         Effects.args.y0 = 0;
         Effects.args.y1 = Effects.args.height * 0.25;
         Effects.args.y2 = Effects.args.height * 0.5;
+        Effects.args.y3 = Effects.args.height * 0.75;
+        Effects.args.y4 = Effects.args.height;
         requestAnimationFrame(this.waveEffect);
     }
 
@@ -138,27 +141,25 @@ class Effects {
         const args = Effects.args;
         args.ctx.clearRect(0, 0, args.width, args.height);
         args.ctx2.clearRect(0, 0, args.width, args.height);
-        for (let imageY = 0; imageY < args.height; imageY++) {
-            const ly1 = args.y1 + args.o1.current(0.2) * 100,
-                ly2 = args.y2 + args.o2.current(0.2) * 50,
+        for (let x = 0; x < args.width; x++) {
+            const ly1 = args.y1 + args.o1.current(x * .2) * 100,
+                ly2 = args.y2 + args.o2.current(x * 0.2) * 50,
+                ly3 = args.y3 + args.o3.current(x * 0.2) * 50,
                 h0 = ly1,
-                h1 = ly2 - ly1;
-            //Draws the images in two parts to hopefully improve performance
-            args.ctx.drawImage(args.img, imageY, args.y0, 5, args.y1, imageY, 0, 1, h0);
-            args.ctx.drawImage(args.img, imageY, args.y1, 5, args.y2 - args.y1, imageY, ly1 - 0.5, 1, h1);
+                h1 = ly2 - ly1,
+                h2 = ly3 - ly2,
+                h3 = args.y4 - ly3;
+            //Draws the images in four parts to enchance effect
+            args.ctx.drawImage(args.img, x, args.y0, 1, args.y1, x, 0, 1, h0);
+            args.ctx.drawImage(args.img, x, args.y1, 1, args.y2 - args.y1, x, ly1 - 0.5, 1, h1);
+            args.ctx.drawImage(args.img, x, args.y1, 1, args.y3 - args.y2, x, ly2 - 1, 1, h2);
+            args.ctx.drawImage(args.img, x, args.y1, 1, args.y4 - args.y3, x, ly3 - 1.5, 1, h3);
 
-            args.ctx2.drawImage(args.img, imageY + args.img.width / 2, args.y0, 1, args.y1, imageY, 0, 1, h0);
-            args.ctx2.drawImage(
-                args.img,
-                imageY + args.img.width / 2,
-                args.y1,
-                1,
-                args.y2 - args.y1,
-                imageY,
-                ly1 - 0.5,
-                1,
-                h1
-            );
+
+            args.ctx2.drawImage(args.img, x+ args.img.width / 2, args.y0, 1, args.y1, x, 0, 1, h0);
+            args.ctx2.drawImage(args.img, x+ args.img.width / 2, args.y1, 1, args.y2 - args.y1, x, ly1 - 0.5, 1, h1);
+            args.ctx2.drawImage(args.img, x+ args.img.width / 2, args.y1, 1, args.y3 - args.y2, x, ly2 - 1, 1, h2);
+            args.ctx2.drawImage(args.img, x+ args.img.width / 2, args.y1, 1, args.y4 - args.y3, x, ly3 - 1.5, 1, h3);
         }
         requestAnimationFrame(Effects.waveEffect);
     };
@@ -172,9 +173,9 @@ class Oscillator {
 
     constructor(speed: number) {
         let frame = 0;
-        this.current = function(x: number) {
-            frame += 0.0001 * speed;
-            return Math.sin((frame + x) * 2);
+        this.current = function (x: number) {
+            frame += 0.001 * speed;
+            return Math.sin((frame + x * speed) * 2);
         };
     }
 }
@@ -277,7 +278,7 @@ class SinScroll {
         let x = SinScroll.theta;
         for (let i: number = 0; i < SinScroll.text.length; i++) {
             SinScroll.renderChar(i, x);
-            x += SinScroll.dx + Math.sin(SinScroll.velocity * x);
+            x += SinScroll.dx + Math.cos(SinScroll.velocity * x);
         }
     }
 
