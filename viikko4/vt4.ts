@@ -45,8 +45,8 @@ class SVG {
             grad: Element = document.createElementNS(svgns, "linearGradient"),
             rect: Element = document.createElementNS(svgns, "rect"),
             stops = [
-                {color: "#000000", offset: "0%"},
-                {color: "#206DFF", offset: "50%"},
+                { color: "#000000", offset: "0%" },
+                { color: "#206DFF", offset: "50%" },
                 {
                     color: "#000000",
                     offset: "100%"
@@ -142,7 +142,7 @@ class Effects {
         args.ctx.clearRect(0, 0, args.width, args.height);
         args.ctx2.clearRect(0, 0, args.width, args.height);
         for (let x = 0; x < args.width; x++) {
-            const ly1 = args.y1 + args.o1.current(x * .2) * 100,
+            const ly1 = args.y1 + args.o1.current(x * 0.2) * 100,
                 ly2 = args.y2 + args.o2.current(x * 0.2) * 50,
                 ly3 = args.y3 + args.o3.current(x * 0.2) * 50,
                 h0 = ly1,
@@ -155,11 +155,10 @@ class Effects {
             args.ctx.drawImage(args.img, x, args.y1, 1, args.y3 - args.y2, x, ly2 - 1, 1, h2);
             args.ctx.drawImage(args.img, x, args.y1, 1, args.y4 - args.y3, x, ly3 - 1.5, 1, h3);
 
-
-            args.ctx2.drawImage(args.img, x+ args.img.width / 2, args.y0, 1, args.y1, x, 0, 1, h0);
-            args.ctx2.drawImage(args.img, x+ args.img.width / 2, args.y1, 1, args.y2 - args.y1, x, ly1 - 0.5, 1, h1);
-            args.ctx2.drawImage(args.img, x+ args.img.width / 2, args.y1, 1, args.y3 - args.y2, x, ly2 - 1, 1, h2);
-            args.ctx2.drawImage(args.img, x+ args.img.width / 2, args.y1, 1, args.y4 - args.y3, x, ly3 - 1.5, 1, h3);
+            args.ctx2.drawImage(args.img, x + args.img.width / 2, args.y0, 1, args.y1, x, 0, 1, h0);
+            args.ctx2.drawImage(args.img, x + args.img.width / 2, args.y1, 1, args.y2 - args.y1, x, ly1 - 0.5, 1, h1);
+            args.ctx2.drawImage(args.img, x + args.img.width / 2, args.y1, 1, args.y3 - args.y2, x, ly2 - 1, 1, h2);
+            args.ctx2.drawImage(args.img, x + args.img.width / 2, args.y1, 1, args.y4 - args.y3, x, ly3 - 1.5, 1, h3);
         }
         requestAnimationFrame(Effects.waveEffect);
     };
@@ -173,7 +172,7 @@ class Oscillator {
 
     constructor(speed: number) {
         let frame = 0;
-        this.current = function (x: number) {
+        this.current = function(x: number) {
             frame += 0.001 * speed;
             return Math.sin((frame + x * speed) * 2);
         };
@@ -231,7 +230,7 @@ class SinScroll {
         SinScroll.canvas = <HTMLCanvasElement>document.getElementById("sinusScroller");
         SinScroll.ctx = <CanvasRenderingContext2D>SinScroll.canvas.getContext("2d");
         SinScroll.yValues = new Array(SinScroll.text.length);
-        SinScroll.dx = 2 * Math.PI / SinScroll.canvas.width * SinScroll.xSpacing;
+        SinScroll.dx = ((2 * Math.PI) / SinScroll.canvas.width) * SinScroll.xSpacing;
         requestAnimationFrame(SinScroll.scrollSinus);
     }
 

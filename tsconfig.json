@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./viikko4/build",
+    "outDir": "./viikko5/build/",
     "module": "amd",
     "allowJs": true,
     "target": "es6",
@@ -9,6 +9,6 @@
     "strict": true
   },
   "include": [
-    "./viikko4/*"
+    "./viikko5/*"
   ]
 }

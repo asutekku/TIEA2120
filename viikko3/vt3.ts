@@ -90,7 +90,7 @@ class UI {
     static setTeamHandlers(): void {
         const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
         const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
-        teamInput.onblur = function () {
+        teamInput.onblur = function() {
             if (Validate.teamUnique(teamInput.value)) {
                 teamInput.classList.remove("invalid");
             } else {
@@ -115,7 +115,7 @@ class UI {
         );
         teamInput.addEventListener(
             "invalid",
-            function () {
+            function() {
                 if (!Validate.teamUnique(teamInput.value)) {
                     this.setCustomValidity(`"${teamInput.value}" on jo käytössä, valitse toinen nimi!`);
                 }
@@ -188,7 +188,7 @@ class UI {
             kisaNimi: HTMLInputElement = kisaForm.querySelector("input[name=kisaNimi]");
         kisaNimi.addEventListener(
             "submit",
-            function () {
+            function() {
                 kisaNimi.setCustomValidity("");
                 if (!Validate.kisaUnique(kisaNimi.value)) {
                     kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -198,7 +198,7 @@ class UI {
             },
             false
         );
-        kisaNimi.onblur = function () {
+        kisaNimi.onblur = function() {
             kisaNimi.setCustomValidity("");
             if (!Validate.kisaUnique(kisaNimi.value)) {
                 kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -334,7 +334,11 @@ class UI {
     static updateOptions(): void {
         const rastiInputs = document.querySelectorAll("input[list=rastit]"),
             rastiList = Array.from(rastiInputs)
-                .filter(e => (e as HTMLInputElement).value !== "" && rastit.find(l => l.koodi === (e as HTMLInputElement).value))
+                .filter(
+                    e =>
+                        (e as HTMLInputElement).value !== "" &&
+                        rastit.find(l => l.koodi === (e as HTMLInputElement).value)
+                )
                 .map(e => (e as HTMLInputElement).value),
             selections = rastit.map(e => e.koodi).filter(e => !rastiList.includes(e)),
             rastiSelection = document.getElementById("rastit");
@@ -440,7 +444,9 @@ class UI {
             rastiDateInput = document.createElement("input"),
             rastiPoistoInput = document.createElement("input"),
             sarja: Sarja | null = team ? Validate.getSarjaByID(team.sarja) : null,
-            kisa: Kisa | null = team ? Validate.getKisaById(Validate.getSarjaByID(team.sarja).kilpailu) : Validate.getKisaById(5372934059196416);
+            kisa: Kisa | null = team
+                ? Validate.getKisaById(Validate.getSarjaByID(team.sarja).kilpailu)
+                : Validate.getKisaById(5372934059196416);
         let maxAika: number, minAika: number;
         if (sarja) {
             if (sarja.loppuaika !== null || sarja.alkuaika !== null) {
@@ -480,7 +486,7 @@ class UI {
         };
         rastiDateInput.onblur = () => {
             const val: number = new Date(rastiDateInput.value).getTime();
-            if (val < minAika || val > maxAika && rastiInputlist.value !== "") {
+            if (val < minAika || (val > maxAika && rastiInputlist.value !== "")) {
                 rastiDateInput.setCustomValidity("Ajan tulee sijoittua kisan ajalle");
             } else {
                 rastiDateInput.setCustomValidity("");
@@ -511,7 +517,7 @@ class Validate {
             leimaustavat = Validate.getLeimaustapa(),
             sarja = Validate.getSarja(),
             formValid: boolean = Validate.teamNameInput() && jasenet.length >= 2 && leimaustavat.length >= 1,
-            rastit = Validate.getRastitFromForm()
+            rastit = Validate.getRastitFromForm();
         if (formValid) {
             const newTeam = new Joukkue(
                 teamName,
@@ -604,7 +610,7 @@ class Validate {
 
     /**
      * some helper functions
-    */
+     */
     static teamUnique(name: string): boolean {
         return !joukkueet.find(e => e.nimi.toLowerCase() === name.trim().toLowerCase());
     }
@@ -633,12 +639,16 @@ class Validate {
      */
     static getRastitFromForm(): Rastileimaus[] {
         const rows = Array.from(applicationForm.getElementsByClassName("rastiLeimausRow"));
-        const rastitFrom: Rastileimaus[] = rows.filter(e => (e.childNodes[2].childNodes[0] as HTMLInputElement).checked === false)
+        const rastitFrom: Rastileimaus[] = rows
+            .filter(e => (e.childNodes[2].childNodes[0] as HTMLInputElement).checked === false)
             .map(e => {
                 const rastiKoodi: string = (e.childNodes[0].childNodes[0] as HTMLInputElement).value,
-                    rastiAika: string = Util.getDate(new Date((e.childNodes[1].childNodes[0] as HTMLInputElement).value));
-                return new Rastileimaus(rastiAika,Validate.getRastiByCode(rastiKoodi).id);
-            }).filter(e => !isNaN(e.aika));
+                    rastiAika: string = Util.getDate(
+                        new Date((e.childNodes[1].childNodes[0] as HTMLInputElement).value)
+                    );
+                return new Rastileimaus(rastiAika, Validate.getRastiByCode(rastiKoodi).id);
+            })
+            .filter(e => !isNaN(e.aika));
         return rastitFrom;
     }
     /**
@@ -654,7 +664,6 @@ class Validate {
         const rastiInputs = Array.from(document.querySelectorAll("input[list=rastit]")),
             filled: number = rastiInputs.filter(e => (e as HTMLInputElement).value !== "").length;
         return filled === rastiInputs.length;
-
     }
     /**
      * some helper functions
@@ -677,7 +686,7 @@ class Validate {
      * some helper functions
      */
     static rastikoodi(koodi): boolean {
-        return !!rastit.find(e => (e.koodi === koodi));
+        return !!rastit.find(e => e.koodi === koodi);
     }
     /**
      * some helper functions
@@ -750,7 +759,7 @@ class dataset {
             sarja: team.sarja,
             seura: team.seura,
             id: team.id,
-            rastit: team.rastit.map(e => ({aika: Util.getDate(new Date(e.aika)), id: e.id})),
+            rastit: team.rastit.map(e => ({ aika: Util.getDate(new Date(e.aika)), id: e.id })),
             pisteet: team.pisteet,
             matka: team.matka,
             leimaustapa: team.leimaustapa,
@@ -758,7 +767,7 @@ class dataset {
         };
         if (editing) {
             const index = joukkueet
-                .map(function (e) {
+                .map(function(e) {
                     return e.id;
                 })
                 .indexOf(tempID);
