@@ -10,5 +10,7 @@
   },
   "include": [
     "./viikko5/*"
+  ],"exclude": [
+    "./viikko5/build/vt5.js"
   ]
 }
