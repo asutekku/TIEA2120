@@ -1,40 +1,43 @@
 "use strict";
 
-const appData: any = data;
+const appData: any = data!;
 
 let teams: Joukkue[] = [],
-    rastit: Rasti[] = [];
+    rastit: Rasti[] = [],
+    karttaRastit: L.Circle[] = [],
+    reitit: L.Polyline[] = [];
 
 class OrienteeringApplication {
     public static main(): void {
         OrienteeringApplication.loadData();
         leafMap.init();
-        UIhandlers.loadTeams();
-        mapHandlers.addRastitToMap(teams[0]);
         UIhandlers.setMapDrop();
         UIhandlers.additionalUIeffects();
+        UIhandlers.loadTeams();
+        mapHandlers.addRastitToMap();
+        UIhandlers.setView();
     }
 
     static loadData(): void {
+        rastit = appData.rastit.map((e: any) => new Rasti(e.lon, e.lat, e.koodi, e.id));
         for (let i = 0; i < appData.joukkueet.length; i++) {
             let e = appData.joukkueet[i];
-            const leimaukset = e.rastit.map((l: any) => new Leimaus(l.aika, l.id));
-            teams.push(new Joukkue(e.nimi, e.id, util.rainbow(appData.joukkueet.length, i), leimaukset));
+            const leimaukset: Leimaus[] = e.rastit.map((l: any) => new Leimaus(l.aika, l.id)),
+                team = new Joukkue(e.nimi, e.id, util.rainbow(appData.joukkueet.length, i), leimaukset);
+            teams.push(team);
         }
-        rastit = appData.rastit.map((e: any) => new Rasti(e.lon, e.lat, e.koodi, e.id));
     }
 }
 
 class leafMap {
-    static view = L.map("orienteeringMap").setView([62.133029, 25.737019], 13);
+    static map = L.map("orienteeringMap").setView([62.133029, 25.737019], 13);
 
     static init(): void {
         L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
-            maxZoom: 18,
-            id: "mapbox.streets",
-            accessToken: "your.mapbox.access.token"
-        }).addTo(leafMap.view);
+            maxZoom: 16,
+            minZoom: 12
+        }).addTo(leafMap.map);
     }
 }
 
@@ -48,11 +51,27 @@ class UIhandlers {
         });
     }
 
+    static setView(): void {
+        leafMap.map.fitBounds(util.getCorners());
+    }
+
     static additionalUIeffects(): void {
         const hide = document.getElementById("showmore")!;
         hide.addEventListener("click", e => {
+            const cont = document.getElementById("teamContainer")!;
             const text = document.getElementById("showmore-text")!;
             text.textContent = (UIhandlers.listVisible ? "Näytä" : "Piilota") + " joukkuelistaus";
+            if (UIhandlers.listVisible) {
+                cont.classList.add("animationHide");
+                cont.classList.remove("animationShow");
+                setTimeout(function () {
+                    cont.classList.add("hide");
+                }, 900);
+            } else {
+                cont.classList.remove("animationHide");
+                cont.classList.add("animationShow");
+                cont.classList.remove("hide");
+            }
             UIhandlers.listVisible = !UIhandlers.listVisible;
         });
     }
@@ -65,47 +84,102 @@ class UIhandlers {
         e.preventDefault();
     }
 
-    static drop() {
-        console.log(":)");
+    static drop(e: any) {
     }
 
-    static dragstart_handler(e) {
-        console.log("dragStart");
-        // Add the target element's id to the data transfer object
+    static dragstart_handler(e: any) {
         e.dataTransfer.setData("text/plain", e.target.id);
     }
 
     static setMapDrop(): void {
         const map = document.getElementById("mapContainer")!;
-        map.addEventListener("dragover", function(e) {
+        const teamsDOM = document.getElementById("joukkueet")!;
+        const onMapDOM = document.getElementById("kartalla")!;
+        map.addEventListener("dragover", function (e) {
             e.preventDefault();
             this.className = "over";
             e.dataTransfer.dropEffect = "move";
             return false;
         });
-        map.addEventListener("drop", function(e) {
+        map.addEventListener("drop", function (e) {
             if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text"))!,
                 teamID = e.dataTransfer.getData("Text"),
-                team = teams.find(e => e.id === parseInt(teamID))!,
-                kartalla = document.getElementById("kartalla")!;
+                team = teams.find(e => e.id === parseInt(teamID))!;
             el.parentNode!.removeChild(el);
-            kartalla.appendChild(el);
-            mapHandlers.getTeamRoute(team);
+            onMapDOM.insertBefore(el, onMapDOM.firstChild);
+            if (team.reitti) {
+                leafMap.map.removeLayer(team.reitti);
+                team.reitti = undefined;
+                mapHandlers.getTeamRoute(team);
+            } else {
+                mapHandlers.getTeamRoute(team);
+            }
+        });
+        teamsDOM.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            return false;
+        });
+        teamsDOM.addEventListener("drop", function (e) {
+            if (e.stopPropagation) e.stopPropagation();
+            e.preventDefault();
+            const el = document.getElementById(e.dataTransfer.getData("Text"))!,
+                teamID = e.dataTransfer.getData("Text"),
+                team = teams.find(e => e.id === parseInt(teamID))!;
+            el.parentNode!.removeChild(el);
+            teamsDOM.appendChild(el);
+            mapHandlers.setRastiColours(team.reitti, "red");
+            leafMap.map.removeLayer(team.reitti);
+        });
+        onMapDOM.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            return false;
+        });
+        onMapDOM.addEventListener("drop", function (e) {
+            if (e.stopPropagation) e.stopPropagation();
+            e.preventDefault();
+            const el = document.getElementById(e.dataTransfer.getData("Text"))!,
+                teamID = e.dataTransfer.getData("Text"),
+                team = teams.find(e => e.id === parseInt(teamID))!;
+            onMapDOM.insertBefore(el, onMapDOM.firstChild);
+            if (team.reitti) {
+                leafMap.map.removeLayer(team.reitti);
+                team.reitti = undefined;
+                mapHandlers.getTeamRoute(team);
+            } else {
+                mapHandlers.getTeamRoute(team);
+            }
         });
     }
 }
 
 class mapHandlers {
-    static addRastitToMap(team: Joukkue): void {
+    static addRastitToMap(): void {
         rastit.forEach(e => {
             const leimaus = L.circle([e.lat, e.lon], {
                 color: "red",
                 fillOpacity: 0.5,
                 radius: 150
-            }).addTo(leafMap.view);
+            }).addTo(leafMap.map);
+            karttaRastit.push(leimaus);
             leimaus.bindPopup(`Rasti ${e.koodi}`);
+        });
+    }
+
+    static setRastiColours(reitti: L.Polyline, color: string): void {
+        const lats: any[] = reitti.getLatLngs();
+        const kaydyt = lats.map(e => {
+            const rasti: L.Circle = karttaRastit.find((l: L.Circle) => {
+                const rastilat = l.getLatLng();
+                return rastilat.lat === e.lat;
+            })!;
+            return rasti;
+        });
+        kaydyt.forEach(e => {
+            e.setStyle({color: color});
         });
     }
 
@@ -114,8 +188,12 @@ class mapHandlers {
         const coords: any = teamRastit.map(e => {
             return [e!.lat, e!.lon];
         });
-        const viiva = L.polyline(coords, { color: team.color }).addTo(leafMap.view);
-        viiva.bindPopup(`Joukkueen ${team.nimi} käymä reitti`);
+        const reitti: L.Polyline = L.polyline(coords, {color: team.color})!;
+        leafMap.map.addLayer(reitti);
+        team.reitti = reitti;
+        reitit.push(reitti);
+        mapHandlers.setRastiColours(reitti, team.color);
+        reitti.bindPopup(`Joukkueen ${team.nimi} käymä reitti`);
     }
 }
 
@@ -163,25 +241,42 @@ class util {
                 b = q;
                 break;
         }
-        let c =
+        return (
             "#" +
             ("00" + (~~(r * 255)).toString(16)).slice(-2) +
             ("00" + (~~(g * 255)).toString(16)).slice(-2) +
-            ("00" + (~~(b * 255)).toString(16)).slice(-2);
-        return c;
+            ("00" + (~~(b * 255)).toString(16)).slice(-2)
+        );
     }
 
-    static getMatka(team: Joukkue) {
+    static getMatka(leimaukset: Leimaus[]) {
         let matka = 0;
-        const kaydytRastit = team.leimaukset;
-        for (let i = 0; i < kaydytRastit.length - 1; i++) {
-            let rasti1 = util.getMatchingRasti(kaydytRastit[i].id);
-            let rasti2 = util.getMatchingRasti(kaydytRastit[i + 1].id);
+        for (let i = 0; i < leimaukset.length - 1; i++) {
+            let rasti1 = util.getMatchingRasti(leimaukset[i].id);
+            let rasti2 = util.getMatchingRasti(leimaukset[i + 1].id);
             try {
                 matka += util.getDistanceFromLatLonInKm(rasti1!.lat, rasti1!.lon, rasti2!.lat, rasti2!.lon);
-            } catch (err) {}
+            } catch (err) {
+            }
         }
-        return Math.floor(matka);
+        return Math.round(matka * 10) / 10;
+    }
+
+    static getCorners() {
+        let tr: number[], bl: number[];
+        const cords = karttaRastit.map(e => {
+            const c = e.getLatLng();
+            return [c.lat, c.lng];
+        });
+        tr = cords[0];
+        bl = cords[0];
+        cords.forEach(e => {
+            if (e[0] > bl[0] && e[1] > bl[1]) bl = e;
+            if (e[0] < tr[0] && e[1] < tr[1]) tr = e;
+        });
+        const c1 = L.latLng(tr[0], tr[1]);
+        const c2 = L.latLng(bl[0], bl[1]);
+        return L.latLngBounds(c1, c2);
     }
 
     /**
@@ -208,12 +303,14 @@ class util {
         return deg * (Math.PI / 180);
     }
 
-    static getKaydytRastit(team: Joukkue) {
+    static getKaydytRastit(team: Joukkue): Rasti[] {
         return rastit.filter((p: Rasti) => p.id === team.id);
     }
 
-    static getMatchingRasti(rastiID: number) {
-        return rastit.find((r: Rasti) => r.id == rastiID);
+    static getMatchingRasti(rastiID: number): Rasti | undefined {
+        return rastit.find((r: Rasti) => {
+            return r.id === rastiID;
+        });
     }
 }
 
@@ -228,7 +325,7 @@ class Paper {
             teamTextContainer = document.createElement("div");
         teamColor.style.background = team.color;
         teamName.textContent = team.nimi;
-        teamTravel.textContent = "Kuljettu matka: ";
+        teamTravel.textContent = `Kuljettu matka: ${team.matka}km`;
         containerInner.appendChild(teamColor);
         containerInner.appendChild(teamTextContainer);
         teamTextContainer.appendChild(teamName);
@@ -243,7 +340,6 @@ class Paper {
         container.appendChild(containerInner);
         container.setAttribute("draggable", "true");
         container.addEventListener("dragstart", UIhandlers.dragstart_handler);
-        container.addEventListener("drop", UIhandlers.drop);
         frag.appendChild(container);
         return frag;
     }
@@ -254,17 +350,22 @@ class Joukkue {
     leimaukset: Leimaus[];
     id: number;
     color: string;
+    reitti: any;
+    matka: number;
+
     constructor(nimi: string, id: string, color: string, leimaukset: Leimaus[]) {
         this.nimi = nimi;
         this.leimaukset = leimaukset;
         this.color = color;
         this.id = parseInt(id.toString());
+        this.matka = util.getMatka(this.leimaukset);
     }
 }
 
 class Leimaus {
     aika: number;
     id: number;
+
     constructor(aika: string, id: string) {
         this.aika = Date.parse(aika);
         this.id = parseInt(id.toString());
@@ -276,6 +377,7 @@ class Rasti {
     lat: number;
     koodi: string;
     id: number;
+
     constructor(lon: string, lat: string, koodi: string, id: number) {
         this.lon = parseFloat(lon);
         this.lat = parseFloat(lat);
