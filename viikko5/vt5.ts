@@ -5,7 +5,8 @@ const appData: any = data!;
 let teams: Joukkue[] = [],
     rastit: Rasti[] = [],
     karttaRastit: L.Circle[] = [],
-    reitit: L.Polyline[] = [];
+    reitit: L.Polyline[] = [],
+    selected: L.Circle;
 
 class OrienteeringApplication {
     public static main(): void {
@@ -64,7 +65,7 @@ class UIhandlers {
             if (UIhandlers.listVisible) {
                 cont.classList.add("animationHide");
                 cont.classList.remove("animationShow");
-                setTimeout(function () {
+                setTimeout(function() {
                     cont.classList.add("hide");
                 }, 900);
             } else {
@@ -76,6 +77,10 @@ class UIhandlers {
         });
     }
 
+    static joukkuuetOnList(): number {
+        return document.getElementById("joukkueet")!.childElementCount;
+    }
+
     static dragover(e: Event) {
         e.preventDefault();
     }
@@ -84,8 +89,7 @@ class UIhandlers {
         e.preventDefault();
     }
 
-    static drop(e: any) {
-    }
+    static drop(e: any) {}
 
     static dragstart_handler(e: any) {
         e.dataTransfer.setData("text/plain", e.target.id);
@@ -95,13 +99,13 @@ class UIhandlers {
         const map = document.getElementById("mapContainer")!;
         const teamsDOM = document.getElementById("joukkueet")!;
         const onMapDOM = document.getElementById("kartalla")!;
-        map.addEventListener("dragover", function (e) {
+        map.addEventListener("dragover", function(e) {
             e.preventDefault();
             this.className = "over";
             e.dataTransfer.dropEffect = "move";
             return false;
         });
-        map.addEventListener("drop", function (e) {
+        map.addEventListener("drop", function(e) {
             if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text"))!,
@@ -116,13 +120,17 @@ class UIhandlers {
             } else {
                 mapHandlers.getTeamRoute(team);
             }
+            console.log(UIhandlers.joukkuuetOnList());
+            if (UIhandlers.joukkuuetOnList() <= 1) {
+                document.getElementById("joukkueet-empty")!.classList.remove("hide");
+            }
         });
-        teamsDOM.addEventListener("dragover", function (e) {
+        teamsDOM.addEventListener("dragover", function(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
             return false;
         });
-        teamsDOM.addEventListener("drop", function (e) {
+        teamsDOM.addEventListener("drop", function(e) {
             if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text"))!,
@@ -132,13 +140,16 @@ class UIhandlers {
             teamsDOM.appendChild(el);
             mapHandlers.setRastiColours(team.reitti, "red");
             leafMap.map.removeLayer(team.reitti);
+            if (UIhandlers.joukkuuetOnList() <= 2) {
+                document.getElementById("joukkueet-empty")!.classList.add("hide");
+            }
         });
-        onMapDOM.addEventListener("dragover", function (e) {
+        onMapDOM.addEventListener("dragover", function(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
             return false;
         });
-        onMapDOM.addEventListener("drop", function (e) {
+        onMapDOM.addEventListener("drop", function(e) {
             if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text"))!,
@@ -165,8 +176,37 @@ class mapHandlers {
                 radius: 150
             }).addTo(leafMap.map);
             karttaRastit.push(leimaus);
-            leimaus.bindPopup(`Rasti ${e.koodi}`);
+            const koodi = L.divIcon({
+                iconSize: new L.Point(50, 50),
+                html: `<div>${e.koodi}</div>`
+            });
+            /**
+             * Yksi aste on kutakuinkin 111111 metriä
+             * 200 metriä on tällöin pyöristäen 111111 / 200
+             *
+             * Ja on muuten hyvä kysymys, miksi latituden muutos siirtää
+             * markeria pystysuunnassa. Ainakin näin se oli nimetty datassa
+             */
+            L.marker([e.lat + 200 / 111111, e.lon], { icon: koodi }).addTo(leafMap.map);
+            leimaus.on("click", mapHandlers.onLeimausClick);
         });
+    }
+
+    static onLeimausClick(e: any) {
+        if (selected === undefined){
+            e.target.setStyle({
+                fillOpacity: 1
+            });
+            selected = e.target;
+        } else {
+            selected.setStyle({ 
+                fillOpacity: 0.5 });
+            e.target.setStyle({
+                fillOpacity: 1
+            });
+            selected = e.target;
+        }
+        
     }
 
     static setRastiColours(reitti: L.Polyline, color: string): void {
@@ -179,7 +219,7 @@ class mapHandlers {
             return rasti;
         });
         kaydyt.forEach(e => {
-            e.setStyle({color: color});
+            e.setStyle({ color: color });
         });
     }
 
@@ -188,7 +228,7 @@ class mapHandlers {
         const coords: any = teamRastit.map(e => {
             return [e!.lat, e!.lon];
         });
-        const reitti: L.Polyline = L.polyline(coords, {color: team.color})!;
+        const reitti: L.Polyline = L.polyline(coords, { color: team.color })!;
         leafMap.map.addLayer(reitti);
         team.reitti = reitti;
         reitit.push(reitti);
@@ -256,8 +296,7 @@ class util {
             let rasti2 = util.getMatchingRasti(leimaukset[i + 1].id);
             try {
                 matka += util.getDistanceFromLatLonInKm(rasti1!.lat, rasti1!.lon, rasti2!.lat, rasti2!.lon);
-            } catch (err) {
-            }
+            } catch (err) {}
         }
         return Math.round(matka * 10) / 10;
     }

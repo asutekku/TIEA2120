@@ -230,7 +230,7 @@ class SinScroll {
         SinScroll.canvas = <HTMLCanvasElement>document.getElementById("sinusScroller");
         SinScroll.ctx = <CanvasRenderingContext2D>SinScroll.canvas.getContext("2d");
         SinScroll.yValues = new Array(SinScroll.text.length);
-        SinScroll.dx = 2 * Math.PI / SinScroll.canvas.width * SinScroll.xSpacing;
+        SinScroll.dx = ((2 * Math.PI) / SinScroll.canvas.width) * SinScroll.xSpacing;
         requestAnimationFrame(SinScroll.scrollSinus);
     }
 

@@ -1,6 +1,6 @@
 "use strict";
 const appData = data;
-let teams = [], rastit = [], karttaRastit = [], reitit = [];
+let teams = [], rastit = [], karttaRastit = [], reitit = [], selected;
 class OrienteeringApplication {
     static main() {
         OrienteeringApplication.loadData();
@@ -61,14 +61,16 @@ class UIhandlers {
             UIhandlers.listVisible = !UIhandlers.listVisible;
         });
     }
+    static joukkuuetOnList() {
+        return document.getElementById("joukkueet").childElementCount;
+    }
     static dragover(e) {
         e.preventDefault();
     }
     static dragenter(e) {
         e.preventDefault();
     }
-    static drop(e) {
-    }
+    static drop(e) { }
     static dragstart_handler(e) {
         e.dataTransfer.setData("text/plain", e.target.id);
     }
@@ -97,6 +99,10 @@ class UIhandlers {
             else {
                 mapHandlers.getTeamRoute(team);
             }
+            console.log(UIhandlers.joukkuuetOnList());
+            if (UIhandlers.joukkuuetOnList() <= 1) {
+                document.getElementById("joukkueet-empty").classList.remove("hide");
+            }
         });
         teamsDOM.addEventListener("dragover", function (e) {
             e.preventDefault();
@@ -112,6 +118,9 @@ class UIhandlers {
             teamsDOM.appendChild(el);
             mapHandlers.setRastiColours(team.reitti, "red");
             leafMap.map.removeLayer(team.reitti);
+            if (UIhandlers.joukkuuetOnList() <= 2) {
+                document.getElementById("joukkueet-empty").classList.add("hide");
+            }
         });
         onMapDOM.addEventListener("dragover", function (e) {
             e.preventDefault();
@@ -145,8 +154,37 @@ class mapHandlers {
                 radius: 150
             }).addTo(leafMap.map);
             karttaRastit.push(leimaus);
-            leimaus.bindPopup(`Rasti ${e.koodi}`);
+            const koodi = L.divIcon({
+                iconSize: new L.Point(50, 50),
+                html: `<div>${e.koodi}</div>`
+            });
+            /**
+             * Yksi aste on kutakuinkin 111111 metriä
+             * 200 metriä on tällöin pyöristäen 111111 / 200
+             *
+             * Ja on muuten hyvä kysymys, miksi latituden muutos siirtää
+             * markeria pystysuunnassa. Ainakin näin se oli nimetty datassa
+             */
+            L.marker([e.lat + 200 / 111111, e.lon], { icon: koodi }).addTo(leafMap.map);
+            leimaus.on("click", mapHandlers.onLeimausClick);
         });
+    }
+    static onLeimausClick(e) {
+        if (selected === undefined) {
+            e.target.setStyle({
+                fillOpacity: 1
+            });
+            selected = e.target;
+        }
+        else {
+            selected.setStyle({
+                fillOpacity: 0.5
+            });
+            e.target.setStyle({
+                fillOpacity: 1
+            });
+            selected = e.target;
+        }
     }
     static setRastiColours(reitti, color) {
         const lats = reitti.getLatLngs();
@@ -229,8 +267,7 @@ class util {
             try {
                 matka += util.getDistanceFromLatLonInKm(rasti1.lat, rasti1.lon, rasti2.lat, rasti2.lon);
             }
-            catch (err) {
-            }
+            catch (err) { }
         }
         return Math.round(matka * 10) / 10;
     }

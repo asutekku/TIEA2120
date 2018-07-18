@@ -14,10 +14,10 @@
 <body>
     <div class="App">
         <div class="container">
-            <div class="upperContainer">
+            <div class="upperContainer noselect">
                 <div class="cardContainer card">
                     <div class="card-header">
-                        <h1>
+                        <h1 class="card-header-text">
                             Joukkueet
                         </h1>
                     </div>
@@ -27,7 +27,9 @@
                                 Valittavissa
                             </h2>
                             <div id="joukkueet">
-
+                                <div class="card-info-hidden hide" id ="joukkueet-empty">
+                                    <span class="card-info-hidden-text">Raahaa joukkue tähän poistaaksesi sen kartalta</span>
+                                </div>
                             </div>
                         </div>
                         <div class="teamSetupContainer">
