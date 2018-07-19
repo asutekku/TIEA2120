@@ -1,6 +1,6 @@
 "use strict";
 const appData = data;
-let teams = [], rastit = [], karttaRastit = [], reitit = [], selected;
+let teams = [], rastit = [], karttaRastit = [], reitit = [], teamsOnMap = [], selected, selectionMarker, rastiMarkers = [];
 class OrienteeringApplication {
     static main() {
         OrienteeringApplication.loadData();
@@ -89,19 +89,22 @@ class UIhandlers {
                 e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text")), teamID = e.dataTransfer.getData("Text"), team = teams.find(e => e.id === parseInt(teamID));
-            el.parentNode.removeChild(el);
-            onMapDOM.insertBefore(el, onMapDOM.firstChild);
-            if (team.reitti) {
-                leafMap.map.removeLayer(team.reitti);
-                team.reitti = undefined;
-                mapHandlers.getTeamRoute(team);
-            }
-            else {
-                mapHandlers.getTeamRoute(team);
-            }
-            console.log(UIhandlers.joukkuuetOnList());
-            if (UIhandlers.joukkuuetOnList() <= 1) {
-                document.getElementById("joukkueet-empty").classList.remove("hide");
+            if (team) {
+                const detailDom = Paper.teamListingOnMap(team);
+                el.parentNode.removeChild(el);
+                onMapDOM.insertBefore(detailDom, onMapDOM.firstChild);
+                if (team.reitti) {
+                    leafMap.map.removeLayer(team.reitti);
+                    team.reitti = undefined;
+                    mapHandlers.getTeamRoute(team);
+                }
+                else {
+                    mapHandlers.getTeamRoute(team);
+                }
+                console.log(UIhandlers.joukkuuetOnList());
+                if (UIhandlers.joukkuuetOnList() <= 1) {
+                    document.getElementById("joukkueet-empty").classList.remove("hide");
+                }
             }
         });
         teamsDOM.addEventListener("dragover", function (e) {
@@ -113,13 +116,17 @@ class UIhandlers {
             if (e.stopPropagation)
                 e.stopPropagation();
             e.preventDefault();
-            const el = document.getElementById(e.dataTransfer.getData("Text")), teamID = e.dataTransfer.getData("Text"), team = teams.find(e => e.id === parseInt(teamID));
-            el.parentNode.removeChild(el);
-            teamsDOM.appendChild(el);
-            mapHandlers.setRastiColours(team.reitti, "red");
-            leafMap.map.removeLayer(team.reitti);
-            if (UIhandlers.joukkuuetOnList() <= 2) {
-                document.getElementById("joukkueet-empty").classList.add("hide");
+            const el = document.getElementById(e.dataTransfer.getData("Text")), teamID = e.dataTransfer.getData("Text").split("_")[0], team = teams.find(e => e.id === parseInt(teamID));
+            if (team) {
+                const newEl = Paper.teamListing(team);
+                el.parentNode.removeChild(el);
+                teamsDOM.appendChild(newEl);
+                teamsOnMap.splice(teamsOnMap.indexOf(team), 1);
+                mapHandlers.setRastiColours(team.reitti, "red");
+                leafMap.map.removeLayer(team.reitti);
+                if (UIhandlers.joukkuuetOnList() <= 2) {
+                    document.getElementById("joukkueet-empty").classList.add("hide");
+                }
             }
         });
         onMapDOM.addEventListener("dragover", function (e) {
@@ -154,6 +161,16 @@ class mapHandlers {
                 radius: 150
             }).addTo(leafMap.map);
             karttaRastit.push(leimaus);
+            mapHandlers.drawMarkers();
+            leimaus.on("click", mapHandlers.onLeimausClick);
+        });
+    }
+    static drawMarkers() {
+        rastiMarkers.forEach(e => {
+            leafMap.map.removeLayer(e);
+        });
+        rastiMarkers = [];
+        rastit.forEach(e => {
             const koodi = L.divIcon({
                 iconSize: new L.Point(50, 50),
                 html: `<div>${e.koodi}</div>`
@@ -165,8 +182,9 @@ class mapHandlers {
              * Ja on muuten hyvä kysymys, miksi latituden muutos siirtää
              * markeria pystysuunnassa. Ainakin näin se oli nimetty datassa
              */
-            L.marker([e.lat + 200 / 111111, e.lon], { icon: koodi }).addTo(leafMap.map);
-            leimaus.on("click", mapHandlers.onLeimausClick);
+            const marker = L.marker([e.lat + 200 / 111111, e.lon], { icon: koodi });
+            rastiMarkers.push(marker);
+            marker.addTo(leafMap.map);
         });
     }
     static onLeimausClick(e) {
@@ -185,6 +203,23 @@ class mapHandlers {
             });
             selected = e.target;
         }
+        if (selectionMarker) {
+            leafMap.map.removeLayer(selectionMarker);
+        }
+        const marker = L.marker([selected.getLatLng().lat, selected.getLatLng().lng], { draggable: true }).addTo(leafMap.map);
+        selectionMarker = marker;
+        marker.on("dragend", function (e) {
+            const lat = Math.round(selected.getLatLng().lat * 1000000) / 1000000, lng = Math.round(selected.getLatLng().lng * 1000000) / 1000000, newlon = Math.round(marker.getLatLng().lng * 1000000) / 1000000, newlat = Math.round(marker.getLatLng().lat * 1000000) / 1000000, rasti = util.getRastiByLatLng(lat, lng);
+            selected.setLatLng([newlat, newlon]);
+            rasti.lon = newlon;
+            rasti.lat = newlat;
+            mapHandlers.updateRoutes(rasti.id, newlat, newlon);
+            leafMap.map.removeLayer(selectionMarker);
+            selected.setStyle({
+                fillOpacity: 0.5
+            });
+            mapHandlers.drawMarkers();
+        });
     }
     static setRastiColours(reitti, color) {
         const lats = reitti.getLatLngs();
@@ -207,9 +242,30 @@ class mapHandlers {
         const reitti = L.polyline(coords, { color: team.color });
         leafMap.map.addLayer(reitti);
         team.reitti = reitti;
-        reitit.push(reitti);
+        if (teamsOnMap.indexOf(team) <= -1) {
+            teamsOnMap.push(team);
+        }
         mapHandlers.setRastiColours(reitti, team.color);
         reitti.bindPopup(`Joukkueen ${team.nimi} käymä reitti`);
+    }
+    static updateRoutes(id, newlat, newlon) {
+        const affected = teams.filter((t) => {
+            return t.leimaukset.find((l) => l.id == id);
+        });
+        affected.forEach(e => {
+            e.updateMatka();
+            const matkaDOM = document.getElementById(`matka_${e.id}`);
+            if (matkaDOM) {
+                matkaDOM.textContent = `Kuljettu matka: ${e.matka}km`;
+            }
+        });
+        teamsOnMap.forEach(e => {
+            const index = teamsOnMap.indexOf(e);
+            leafMap.map.removeLayer(e.reitti);
+            mapHandlers.getTeamRoute(e);
+            if (index > -1)
+                teamsOnMap[index] = e;
+        });
     }
 }
 class util {
@@ -307,6 +363,11 @@ class util {
         let d = R * c; // Distance in km
         return d;
     }
+    static getRastiByLatLng(lat, lng) {
+        return rastit.find(e => {
+            return e.lat === lat && e.lon === lng;
+        });
+    }
     static deg2rad(deg) {
         return deg * (Math.PI / 180);
     }
@@ -332,6 +393,7 @@ class Paper {
         teamName.classList.add("teamnode-text");
         teamColor.classList.add("teamnode-color");
         teamTravel.classList.add("teamnode-text-minor");
+        teamTravel.id = `matka_${team.id}`;
         container.classList.add("teamnode-container");
         containerInner.classList.add("teamnode-container-inner");
         teamTextContainer.classList.add("teamnode-container-text");
@@ -342,6 +404,27 @@ class Paper {
         frag.appendChild(container);
         return frag;
     }
+    static teamListingOnMap(team) {
+        const frag = document.createDocumentFragment(), teamSummary = document.createElement("summary"), teamDetails = document.createElement("details"), teamList = document.createElement("ul");
+        teamSummary.textContent = team.nimi;
+        teamDetails.appendChild(teamSummary);
+        teamDetails.appendChild(teamList);
+        teamDetails.id = team.id.toString() + "_D";
+        teamDetails.classList.add("team-details");
+        team.leimaukset.forEach(e => {
+            let rasti = util.getMatchingRasti(e.id);
+            const listItem = document.createElement("li");
+            listItem.id = "TEAM+" + team.id + "_ID" + e.id;
+            listItem.classList.add("team-details-item");
+            listItem.setAttribute("draggable", "true");
+            listItem.textContent = rasti.koodi;
+            teamList.appendChild(listItem);
+        });
+        teamDetails.setAttribute("draggable", "true");
+        teamDetails.addEventListener("dragstart", UIhandlers.dragstart_handler);
+        frag.appendChild(teamDetails);
+        return frag;
+    }
 }
 class Joukkue {
     constructor(nimi, id, color, leimaukset) {
@@ -349,6 +432,9 @@ class Joukkue {
         this.leimaukset = leimaukset;
         this.color = color;
         this.id = parseInt(id.toString());
+        this.matka = util.getMatka(this.leimaukset);
+    }
+    updateMatka() {
         this.matka = util.getMatka(this.leimaukset);
     }
 }
