@@ -42,7 +42,7 @@ class UIhandlers {
     }
     static additionalUIeffects() {
         const hide = document.getElementById("showmore");
-        hide.addEventListener("click", e => {
+        hide.addEventListener("click", () => {
             const cont = document.getElementById("teamContainer");
             const text = document.getElementById("showmore-text");
             text.textContent = (UIhandlers.listVisible ? "Näytä" : "Piilota") + " joukkuelistaus";
@@ -70,7 +70,8 @@ class UIhandlers {
     static dragenter(e) {
         e.preventDefault();
     }
-    static drop(e) { }
+    static drop(e) {
+    }
     static dragstart_handler(e) {
         e.dataTransfer.setData("text/plain", e.target.id);
     }
@@ -189,11 +190,10 @@ class mapHandlers {
     static setRastiColours(reitti, color) {
         const lats = reitti.getLatLngs();
         const kaydyt = lats.map(e => {
-            const rasti = karttaRastit.find((l) => {
+            return karttaRastit.find((l) => {
                 const rastilat = l.getLatLng();
                 return rastilat.lat === e.lat;
             });
-            return rasti;
         });
         kaydyt.forEach(e => {
             e.setStyle({ color: color });
@@ -267,7 +267,8 @@ class util {
             try {
                 matka += util.getDistanceFromLatLonInKm(rasti1.lat, rasti1.lon, rasti2.lat, rasti2.lon);
             }
-            catch (err) { }
+            catch (err) {
+            }
         }
         return Math.round(matka * 10) / 10;
     }
@@ -298,20 +299,15 @@ class util {
      * @returns {number} - The distance traveled
      */
     static getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-        let R = 6371; // Radius of the earth in km
-        let dLat = util.deg2rad(lat2 - lat1); // deg2rad below
-        let dLon = util.deg2rad(lon2 - lon1);
-        let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(util.deg2rad(lat1)) * Math.cos(util.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        let d = R * c; // Distance in km
-        return d;
+        let R = 6371, // Radius of the earth in km,
+        dLat = util.deg2rad(lat2 - lat1), // deg2rad below
+        dLon = util.deg2rad(lon2 - lon1), a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(util.deg2rad(lat1)) * Math.cos(util.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2), c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        // Distance in km
+        return R * c;
     }
     static deg2rad(deg) {
         return deg * (Math.PI / 180);
-    }
-    static getKaydytRastit(team) {
-        return rastit.filter((p) => p.id === team.id);
     }
     static getMatchingRasti(rastiID) {
         return rastit.find((r) => {

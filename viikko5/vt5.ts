@@ -58,14 +58,14 @@ class UIhandlers {
 
     static additionalUIeffects(): void {
         const hide = document.getElementById("showmore")!;
-        hide.addEventListener("click", e => {
+        hide.addEventListener("click", () => {
             const cont = document.getElementById("teamContainer")!;
             const text = document.getElementById("showmore-text")!;
             text.textContent = (UIhandlers.listVisible ? "Näytä" : "Piilota") + " joukkuelistaus";
             if (UIhandlers.listVisible) {
                 cont.classList.add("animationHide");
                 cont.classList.remove("animationShow");
-                setTimeout(function() {
+                setTimeout(function () {
                     cont.classList.add("hide");
                 }, 900);
             } else {
@@ -89,7 +89,8 @@ class UIhandlers {
         e.preventDefault();
     }
 
-    static drop(e: any) {}
+    static drop(e: any) {
+    }
 
     static dragstart_handler(e: any) {
         e.dataTransfer.setData("text/plain", e.target.id);
@@ -99,13 +100,13 @@ class UIhandlers {
         const map = document.getElementById("mapContainer")!;
         const teamsDOM = document.getElementById("joukkueet")!;
         const onMapDOM = document.getElementById("kartalla")!;
-        map.addEventListener("dragover", function(e) {
+        map.addEventListener("dragover", function (e) {
             e.preventDefault();
             this.className = "over";
             e.dataTransfer.dropEffect = "move";
             return false;
         });
-        map.addEventListener("drop", function(e) {
+        map.addEventListener("drop", function (e) {
             if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text"))!,
@@ -125,12 +126,12 @@ class UIhandlers {
                 document.getElementById("joukkueet-empty")!.classList.remove("hide");
             }
         });
-        teamsDOM.addEventListener("dragover", function(e) {
+        teamsDOM.addEventListener("dragover", function (e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
             return false;
         });
-        teamsDOM.addEventListener("drop", function(e) {
+        teamsDOM.addEventListener("drop", function (e) {
             if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text"))!,
@@ -144,12 +145,12 @@ class UIhandlers {
                 document.getElementById("joukkueet-empty")!.classList.add("hide");
             }
         });
-        onMapDOM.addEventListener("dragover", function(e) {
+        onMapDOM.addEventListener("dragover", function (e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
             return false;
         });
-        onMapDOM.addEventListener("drop", function(e) {
+        onMapDOM.addEventListener("drop", function (e) {
             if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text"))!,
@@ -187,39 +188,39 @@ class mapHandlers {
              * Ja on muuten hyvä kysymys, miksi latituden muutos siirtää
              * markeria pystysuunnassa. Ainakin näin se oli nimetty datassa
              */
-            L.marker([e.lat + 200 / 111111, e.lon], { icon: koodi }).addTo(leafMap.map);
+            L.marker([e.lat + 200 / 111111, e.lon], {icon: koodi}).addTo(leafMap.map);
             leimaus.on("click", mapHandlers.onLeimausClick);
         });
     }
 
     static onLeimausClick(e: any) {
-        if (selected === undefined){
+        if (selected === undefined) {
             e.target.setStyle({
                 fillOpacity: 1
             });
             selected = e.target;
         } else {
-            selected.setStyle({ 
-                fillOpacity: 0.5 });
+            selected.setStyle({
+                fillOpacity: 0.5
+            });
             e.target.setStyle({
                 fillOpacity: 1
             });
             selected = e.target;
         }
-        
+
     }
 
     static setRastiColours(reitti: L.Polyline, color: string): void {
         const lats: any[] = reitti.getLatLngs();
         const kaydyt = lats.map(e => {
-            const rasti: L.Circle = karttaRastit.find((l: L.Circle) => {
+            return karttaRastit.find((l: L.Circle) => {
                 const rastilat = l.getLatLng();
                 return rastilat.lat === e.lat;
             })!;
-            return rasti;
         });
         kaydyt.forEach(e => {
-            e.setStyle({ color: color });
+            e.setStyle({color: color});
         });
     }
 
@@ -228,7 +229,7 @@ class mapHandlers {
         const coords: any = teamRastit.map(e => {
             return [e!.lat, e!.lon];
         });
-        const reitti: L.Polyline = L.polyline(coords, { color: team.color })!;
+        const reitti: L.Polyline = L.polyline(coords, {color: team.color})!;
         leafMap.map.addLayer(reitti);
         team.reitti = reitti;
         reitit.push(reitti);
@@ -296,7 +297,8 @@ class util {
             let rasti2 = util.getMatchingRasti(leimaukset[i + 1].id);
             try {
                 matka += util.getDistanceFromLatLonInKm(rasti1!.lat, rasti1!.lon, rasti2!.lat, rasti2!.lon);
-            } catch (err) {}
+            } catch (err) {
+            }
         }
         return Math.round(matka * 10) / 10;
     }
@@ -327,23 +329,18 @@ class util {
      * @returns {number} - The distance traveled
      */
     static getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-        let R = 6371; // Radius of the earth in km
-        let dLat = util.deg2rad(lat2 - lat1); // deg2rad below
-        let dLon = util.deg2rad(lon2 - lon1);
-        let a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(util.deg2rad(lat1)) * Math.cos(util.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        let d = R * c; // Distance in km
-        return d;
+        let R = 6371, // Radius of the earth in km,
+            dLat = util.deg2rad(lat2 - lat1), // deg2rad below
+            dLon = util.deg2rad(lon2 - lon1),
+            a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(util.deg2rad(lat1)) * Math.cos(util.deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2),
+            c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        // Distance in km
+        return R * c;
     }
 
     static deg2rad(deg: number) {
         return deg * (Math.PI / 180);
-    }
-
-    static getKaydytRastit(team: Joukkue): Rasti[] {
-        return rastit.filter((p: Rasti) => p.id === team.id);
     }
 
     static getMatchingRasti(rastiID: number): Rasti | undefined {
