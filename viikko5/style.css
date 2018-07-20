@@ -249,3 +249,14 @@ div.leaflet-marker-icon {
     padding-left: 8px!important;
     padding-right: 8px!important;
 }
+
+.team-details-item{
+  height:32px;
+}
+
+.bottomLine{
+  border-style: solid!important;
+  border-width: 0px;
+  border-top-width: 2px;
+  border-color: #000!important;;
+}

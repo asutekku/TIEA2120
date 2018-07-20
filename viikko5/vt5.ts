@@ -1,5 +1,6 @@
 "use strict";
 
+// tslint:disable-next-line
 const appData: any = data;
 
 let teams: Joukkue[] = [],
@@ -92,10 +93,76 @@ class UIhandlers {
         e.preventDefault();
     }
 
+    static leimausDragEnter(e: any) {
+        e.preventDefault();
+        const target: HTMLElement = e.target;
+        try {
+            target.classList.add("bottomLine");
+        } catch (e) {
+            //It's the text part but I don't want console warnings
+        }
+    }
+
+    static leimausDragExit(e: any) {
+        e.preventDefault();
+        const target: HTMLElement = e.target;
+        try {
+            target.classList.remove("bottomLine");
+        } catch (e) {
+            //It's the text part but I don't want console warnings
+        }
+    }
+
     static drop(e: any) {}
+
+    static leimausDrop(e: any) {
+        if (e.stopPropagation) e.stopPropagation();
+        e.preventDefault();
+        const el = document.getElementById(e.dataTransfer.getData("Text"))!,
+            teamID: string = e.dataTransfer
+                .getData("Text")
+                .split("_")[0]
+                .split(":")[1],
+            rastiID: number = parseInt(
+                e.dataTransfer
+                    .getData("Text")
+                    .split("_")[1]
+                    .split(":")[1]
+            );
+        const team: Joukkue = teams.find(e => e.id === parseInt(teamID))!,
+            target: HTMLElement = e.target,
+            parent = document.getElementById(team.id + "_onMapList")!,
+            oldIndex = team.leimaukset.indexOf(
+                team.leimaukset.find(e => {
+                    return e.id === rastiID;
+                })!
+            );
+        try {
+            parent.insertBefore(el, target);
+        } catch (e) {
+            //Do not try to add the rasti to a wrong team
+        }
+        const newIndex = [...el.parentNode!.children].indexOf(el);
+        const leimaus = team.leimaukset[oldIndex];
+        team.leimaukset.splice(oldIndex, 1);
+        team.leimaukset.splice(newIndex, 0, leimaus);
+        UIhandlers.drawReitti(team);
+        target.classList.remove("bottomLine");
+        team.updateMatka();
+    }
 
     static dragstart_handler(e: any) {
         e.dataTransfer.setData("text/plain", e.target.id);
+    }
+
+    static drawReitti(team: Joukkue) {
+        if (team.reitti) {
+            leafMap.map.removeLayer(team.reitti);
+            team.reitti = undefined;
+            mapHandlers.getTeamRoute(team);
+        } else {
+            mapHandlers.getTeamRoute(team);
+        }
     }
 
     static setMapDrop(): void {
@@ -118,14 +185,7 @@ class UIhandlers {
                 const detailDom = Paper.teamListingOnMap(team);
                 el.parentNode!.removeChild(el);
                 onMapDOM.insertBefore(detailDom, onMapDOM.firstChild);
-                if (team.reitti) {
-                    leafMap.map.removeLayer(team.reitti);
-                    team.reitti = undefined;
-                    mapHandlers.getTeamRoute(team);
-                } else {
-                    mapHandlers.getTeamRoute(team);
-                }
-                console.log(UIhandlers.joukkuuetOnList());
+                UIhandlers.drawReitti(team);
                 if (UIhandlers.joukkuuetOnList() <= 1) {
                     document.getElementById("joukkueet-empty")!.classList.remove("hide");
                 }
@@ -163,15 +223,17 @@ class UIhandlers {
             if (e.stopPropagation) e.stopPropagation();
             e.preventDefault();
             const el = document.getElementById(e.dataTransfer.getData("Text"))!,
-                teamID = e.dataTransfer.getData("Text"),
-                team = teams.find(e => e.id === parseInt(teamID))!;
-            onMapDOM.insertBefore(el, onMapDOM.firstChild);
-            if (team.reitti) {
-                leafMap.map.removeLayer(team.reitti);
-                team.reitti = undefined;
-                mapHandlers.getTeamRoute(team);
-            } else {
-                mapHandlers.getTeamRoute(team);
+                teamID = e.dataTransfer.getData("Text");
+            if (teamID.split("_")[1] === "onMap") {
+                const team = teams.find(e => e.id === parseInt(teamID))!;
+                onMapDOM.insertBefore(el, onMapDOM.firstChild);
+                if (team.reitti) {
+                    leafMap.map.removeLayer(team.reitti);
+                    team.reitti = undefined;
+                    mapHandlers.getTeamRoute(team);
+                } else {
+                    mapHandlers.getTeamRoute(team);
+                }
             }
         });
     }
@@ -464,15 +526,22 @@ class Paper {
         teamSummary.textContent = team.nimi;
         teamDetails.appendChild(teamSummary);
         teamDetails.appendChild(teamList);
-        teamDetails.id = team.id.toString() + "_D";
+        teamDetails.id = team.id.toString() + "_onMap";
         teamDetails.classList.add("team-details");
+        teamList.id = team.id + "_onMapList";
         team.leimaukset.forEach(e => {
             let rasti = util.getMatchingRasti(e.id)!;
             const listItem = document.createElement("li");
-            listItem.id = "TEAM+" + team.id + "_ID" + e.id;
+            const rastiTime = document.createElement("span");
+            listItem.id = "TEAM:" + team.id + "_ID:" + e.id;
             listItem.classList.add("team-details-item");
             listItem.setAttribute("draggable", "true");
             listItem.textContent = rasti.koodi;
+            rastiTime.textContent = e.aika.toString();
+            listItem.addEventListener("dragstart", UIhandlers.dragstart_handler);
+            listItem.addEventListener("drop", UIhandlers.leimausDrop);
+            listItem.addEventListener("dragenter", UIhandlers.leimausDragEnter);
+            listItem.addEventListener("dragexit", UIhandlers.leimausDragExit);
             teamList.appendChild(listItem);
         });
         teamDetails.setAttribute("draggable", "true");
