@@ -1,5 +1,4 @@
 "use strict";
-// tslint:disable-next-line
 const appData = data;
 let teams = [], rastit = [], karttaRastit = [], reitit = [], teamsOnMap = [], selected, selectionMarker, rastiMarkers = [];
 class OrienteeringApplication {
@@ -86,10 +85,8 @@ class UIhandlers {
     static dragenter(e) {
         e.preventDefault();
     }
-<<<<<<< HEAD
     static drop(e) {
     }
-=======
     static leimausDragEnter(e) {
         e.preventDefault();
         const target = e.target;
@@ -110,7 +107,6 @@ class UIhandlers {
             //It's the text part but I don't want console warnings
         }
     }
-    static drop(e) { }
     /**
      * Function to handle drops on top of leimaus
      * Mainly to check that the leimaus belongs to the correct team
@@ -150,7 +146,6 @@ class UIhandlers {
      *
      * @param e Leaflet event
      */
->>>>>>> 957dcec28f139b1785fa39d7bd46454a4390f81a
     static dragstart_handler(e) {
         e.dataTransfer.setData("text/plain", e.target.id);
     }
@@ -209,17 +204,17 @@ class UIhandlers {
         /**
          * Handles the ending of dragging rasti
          */
+        teamsDOM.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            return false;
+        });
         leafMap.map.on("mouseup", () => {
             leafMap.map.dragging.enable();
             leafMap.map.removeEventListener("mousemove", mapHandlers.mapMouseMove);
             mapHandlers.movedObject.setStyle({
                 fillOpacity: .5
             });
-        });
-        teamsDOM.addEventListener("dragover", function (e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = "move";
-            return false;
         });
         teamsDOM.addEventListener("drop", function (e) {
             if (e.stopPropagation)
@@ -351,6 +346,7 @@ class mapHandlers {
             });
             selected = e.target;
         }
+    }
         if (selectionMarker) {
             leafMap.map.removeLayer(selectionMarker);
         }
@@ -395,7 +391,8 @@ class mapHandlers {
                 e.setStyle({ color: color });
             });
         }
-        catch (e) { }
+        catch (e) {
+        }
     }
     /**
      * Gets a polyline route for team and draws it

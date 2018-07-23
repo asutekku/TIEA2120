@@ -1,6 +1,5 @@
 "use strict";
 
-// tslint:disable-next-line
 const appData: any = data;
 
 let teams: Joukkue[] = [],
@@ -108,10 +107,9 @@ class UIhandlers {
         e.preventDefault();
     }
 
-<<<<<<< HEAD
     static drop(e: any) {
     }
-=======
+
     static leimausDragEnter(e: any) {
         e.preventDefault();
         const target: HTMLElement = e.target;
@@ -131,9 +129,6 @@ class UIhandlers {
             //It's the text part but I don't want console warnings
         }
     }
-
-    static drop(e: any) {}
->>>>>>> 957dcec28f139b1785fa39d7bd46454a4390f81a
 
     /**
      * Function to handle drops on top of leimaus
@@ -168,7 +163,7 @@ class UIhandlers {
         } catch (e) {
             //Do not try to add the rasti to a wrong team
         }
-        const newIndex = [...el.parentNode!.children].indexOf(el);
+        const newIndex = [...el.parentNode!.children!].indexOf(el);
         const leimaus = team.leimaukset[oldIndex];
         team.leimaukset.splice(oldIndex, 1);
         team.leimaukset.splice(newIndex, 0, leimaus);
@@ -240,25 +235,22 @@ class UIhandlers {
                 }
             }
         });
-<<<<<<< HEAD
-        teamsDOM.addEventListener("dragover", function (e) {
-=======
+
         /**
          * Handles the ending of dragging rasti
          */
+        teamsDOM.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            return false;
+        });
+
         leafMap.map.on("mouseup", () => {
             leafMap.map.dragging.enable();
             leafMap.map.removeEventListener("mousemove", mapHandlers.mapMouseMove);
             mapHandlers.movedObject.setStyle({
                 fillOpacity: .5
             });
-        });
-
-        teamsDOM.addEventListener("dragover", function(e) {
->>>>>>> 957dcec28f139b1785fa39d7bd46454a4390f81a
-            e.preventDefault();
-            e.dataTransfer.dropEffect = "move";
-            return false;
         });
         teamsDOM.addEventListener("drop", function (e) {
             if (e.stopPropagation) e.stopPropagation();
@@ -351,7 +343,7 @@ class mapHandlers {
      * @param e
      */
     static mapMouseMove(e: any) {
-        let { lat: mouseNewLat, lng: mouseNewLng } = e.latlng;
+        let {lat: mouseNewLat, lng: mouseNewLng} = e.latlng;
         let latDifference = mapHandlers.mouseStartingLat - mouseNewLat;
         let lngDifference = mapHandlers.mouseStartingLng - mouseNewLng;
         const cent = L.latLng(
@@ -386,22 +378,13 @@ class mapHandlers {
              * Ja on muuten hyvä kysymys, miksi latituden muutos siirtää
              * markeria pystysuunnassa. Ainakin näin se oli nimetty datassa
              */
-<<<<<<< HEAD
-            L.marker([e.lat + 200 / 111111, e.lon], {icon: koodi}).addTo(leafMap.map);
-            leimaus.on("click", mapHandlers.onLeimausClick);
-        });
-    }
-
-    static onLeimausClick(e: any) {
-=======
-            const marker = L.marker([e.lat + 200 / 111111, e.lon], { icon: koodi });
+            const marker = L.marker([e.lat + 200 / 111111, e.lon], {icon: koodi});
             rastiMarkers.push(marker);
             marker.addTo(leafMap.map);
         });
     }
 
     /*static onLeimausClick(e: any) {
->>>>>>> 957dcec28f139b1785fa39d7bd46454a4390f81a
         if (selected === undefined) {
             e.target.setStyle({
                 fillOpacity: 1
@@ -416,10 +399,7 @@ class mapHandlers {
             });
             selected = e.target;
         }
-<<<<<<< HEAD
-
     }
-=======
         if (selectionMarker) {
             leafMap.map.removeLayer(selectionMarker);
         }
@@ -444,7 +424,6 @@ class mapHandlers {
             mapHandlers.drawMarkers();
         });
     }*/
->>>>>>> 957dcec28f139b1785fa39d7bd46454a4390f81a
 
     /**
      * Function not currently in use
@@ -461,17 +440,12 @@ class mapHandlers {
                 return rastilat.lat === e.lat;
             })!;
         });
-<<<<<<< HEAD
-        kaydyt.forEach(e => {
-            e.setStyle({color: color});
-        });
-=======
         try {
             kaydyt.forEach(e => {
-                e.setStyle({ color: color });
+                e.setStyle({color: color});
             });
-        } catch (e) {}
->>>>>>> 957dcec28f139b1785fa39d7bd46454a4390f81a
+        } catch (e) {
+        }
     }
 
     /**
