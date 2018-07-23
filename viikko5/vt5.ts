@@ -34,6 +34,9 @@ class OrienteeringApplication {
     }
 }
 
+/**
+ * Class for map
+ */
 class leafMap {
     static map = L.map("orienteeringMap").setView([62.133029, 25.737019], 13);
 
@@ -46,9 +49,15 @@ class leafMap {
     }
 }
 
+/**
+ * Class for UI handling operations
+ */
 class UIhandlers {
     static listVisible = true;
 
+    /**
+     * Creates an dom for team and appends them to the teamcontainer
+     */
     static loadTeams(): void {
         const teamContainer = document.getElementById("joukkueet")!;
         teams.forEach(e => {
@@ -56,10 +65,16 @@ class UIhandlers {
         });
     }
 
+    /**
+     * Fits the view to bounds
+     */
     static setView(): void {
         leafMap.map.fitBounds(util.getCorners());
     }
 
+    /**
+     * Handlers to show and hide the team listing
+     */
     static additionalUIeffects(): void {
         const hide = document.getElementById("showmore")!;
         hide.addEventListener("click", e => {
@@ -115,6 +130,12 @@ class UIhandlers {
 
     static drop(e: any) {}
 
+    /**
+     * Function to handle drops on top of leimaus
+     * Mainly to check that the leimaus belongs to the correct team
+     *
+     * @param e Leaflet event
+     */
     static leimausDrop(e: any) {
         if (e.stopPropagation) e.stopPropagation();
         e.preventDefault();
@@ -151,10 +172,30 @@ class UIhandlers {
         team.updateMatka();
     }
 
+    /**
+     * Returns the id of the event clicked / dragged
+     *
+     * @param e Leaflet event
+     */
     static dragstart_handler(e: any) {
         e.dataTransfer.setData("text/plain", e.target.id);
     }
 
+    /**
+     * Returns the id of the node's parent clicked / dragged
+     *
+     * @param e
+     */
+    static dragstart_ParentID(e: any) {
+        e.dataTransfer.setData("text/plain", e.target.parentNode.id);
+    }
+
+    /**
+     * Draws team's route to the map
+     * If it exists, remove existing and redraw
+     *
+     * @param team Team's route to draw
+     */
     static drawReitti(team: Joukkue) {
         if (team.reitti) {
             leafMap.map.removeLayer(team.reitti);
@@ -165,6 +206,9 @@ class UIhandlers {
         }
     }
 
+    /**
+     * Sets what happens when you drop something on the map
+     */
     static setMapDrop(): void {
         const map = document.getElementById("mapContainer")!;
         const teamsDOM = document.getElementById("joukkueet")!;
@@ -191,6 +235,17 @@ class UIhandlers {
                 }
             }
         });
+        /**
+         * Handles the ending of dragging rasti
+         */
+        leafMap.map.on("mouseup", () => {
+            leafMap.map.dragging.enable();
+            leafMap.map.removeEventListener("mousemove", mapHandlers.mapMouseMove);
+            mapHandlers.movedObject.setStyle({
+                fillOpacity: .5
+            });
+        });
+
         teamsDOM.addEventListener("dragover", function(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
@@ -207,7 +262,7 @@ class UIhandlers {
                 el.parentNode!.removeChild(el);
                 teamsDOM.appendChild(newEl);
                 teamsOnMap.splice(teamsOnMap.indexOf(team), 1);
-                mapHandlers.setRastiColours(team.reitti, "red");
+                //mapHandlers.setRastiColours(team.reitti, "red");
                 leafMap.map.removeLayer(team.reitti);
                 if (UIhandlers.joukkuuetOnList() <= 2) {
                     document.getElementById("joukkueet-empty")!.classList.add("hide");
@@ -240,6 +295,16 @@ class UIhandlers {
 }
 
 class mapHandlers {
+    static mouseStartingLat: number;
+    static mouseStartingLng: number;
+    static circleStartingLat: number;
+    static circleStartingLng: number;
+    static movedObject: any;
+    static movedRasti: any;
+
+    /**
+     * Draws the rastit to the map
+     */
     static addRastitToMap(): void {
         rastit.forEach(e => {
             const leimaus = L.circle([e.lat, e.lon], {
@@ -249,8 +314,50 @@ class mapHandlers {
             }).addTo(leafMap.map);
             karttaRastit.push(leimaus);
             mapHandlers.drawMarkers();
-            leimaus.on("click", mapHandlers.onLeimausClick);
+            //leimaus.on("click", mapHandlers.onLeimausClick);
+            leimaus.on("mousedown", mapHandlers.leimausDown);
         });
+    }
+
+    /**
+     * Eventhandler when user presses leimaus
+     */
+    static leimausDown(event: any) {
+        leafMap.map.dragging.disable();
+        mapHandlers.circleStartingLat = Math.round(event.target._latlng.lat * 1000000) / 1000000;
+        mapHandlers.circleStartingLng = Math.round(event.target._latlng.lng * 1000000) / 1000000;
+        mapHandlers.mouseStartingLat = event.latlng.lat;
+        mapHandlers.mouseStartingLng = event.latlng.lng;
+        mapHandlers.movedObject = event.target;
+        mapHandlers.movedRasti = util.getRastiByLatLng(mapHandlers.circleStartingLat, mapHandlers.circleStartingLng)!;
+        leafMap.map.on("mousemove", mapHandlers.mapMouseMove);
+        mapHandlers.movedObject.setStyle({
+            fillOpacity: 1
+        });
+    }
+
+    /**
+     * Handler to update stuff when user drags the rasti around
+     *
+     * @param e
+     */
+    static mapMouseMove(e: any) {
+        let { lat: mouseNewLat, lng: mouseNewLng } = e.latlng;
+        let latDifference = mapHandlers.mouseStartingLat - mouseNewLat;
+        let lngDifference = mapHandlers.mouseStartingLng - mouseNewLng;
+        const cent = L.latLng(
+            mapHandlers.circleStartingLat - latDifference,
+            mapHandlers.circleStartingLng - lngDifference
+        );
+        const markerCent = L.latLng(
+            mapHandlers.circleStartingLat - latDifference + 200 / 111111,
+            mapHandlers.circleStartingLng - lngDifference
+        );
+        mapHandlers.movedObject.setLatLng(cent);
+        mapHandlers.movedRasti!.lat = Math.round((mapHandlers.circleStartingLat - latDifference) * 1000000) / 1000000;
+        mapHandlers.movedRasti!.lon = Math.round((mapHandlers.circleStartingLng - lngDifference) * 1000000) / 1000000;
+        rastiMarkers[karttaRastit.indexOf(mapHandlers.movedObject)].setLatLng(markerCent);
+        mapHandlers.updateRoutes(mapHandlers.movedRasti.id);
     }
 
     static drawMarkers(): void {
@@ -276,7 +383,7 @@ class mapHandlers {
         });
     }
 
-    static onLeimausClick(e: any) {
+    /*static onLeimausClick(e: any) {
         if (selected === undefined) {
             e.target.setStyle({
                 fillOpacity: 1
@@ -314,8 +421,15 @@ class mapHandlers {
             });
             mapHandlers.drawMarkers();
         });
-    }
+    }*/
 
+    /**
+     * Function not currently in use
+     * Colours the rastimarkers with team's or whatever colour you want to
+     *
+     * @param reitti
+     * @param color
+     */
     static setRastiColours(reitti: L.Polyline, color: string): void {
         const lats: any[] = reitti.getLatLngs();
         const kaydyt = lats.map(e => {
@@ -325,11 +439,19 @@ class mapHandlers {
             })!;
             return rasti;
         });
-        kaydyt.forEach(e => {
-            e.setStyle({ color: color });
-        });
+        try {
+            kaydyt.forEach(e => {
+                e.setStyle({ color: color });
+            });
+        } catch (e) {}
     }
 
+    /**
+     * Gets a polyline route for team and draws it
+     *
+     * @param team team to draw the route
+     *
+     */
     static getTeamRoute(team: Joukkue) {
         const teamRastit = team.leimaukset.map(e => util.getMatchingRasti(e.id));
         const coords: any = teamRastit.map(e => {
@@ -341,11 +463,16 @@ class mapHandlers {
         if (teamsOnMap.indexOf(team) <= -1) {
             teamsOnMap.push(team);
         }
-        mapHandlers.setRastiColours(reitti, team.color);
-        reitti.bindPopup(`Joukkueen ${team.nimi} käymä reitti`);
+        //mapHandlers.setRastiColours(reitti, team.color);
+        //reitti.bindPopup(`Joukkueen ${team.nimi} käymä reitti`);
     }
 
-    static updateRoutes(id: number, newlat: number, newlon: number): void {
+    /**
+     * Updates only the routes that have the rasti that is chaning
+     *
+     * @param id id of the rasti that changes
+     */
+    static updateRoutes(id: number): void {
         const affected: Joukkue[] = teams.filter((t: Joukkue) => {
             return t.leimaukset.find((l: Leimaus) => l.id == id);
         });
@@ -417,6 +544,11 @@ class util {
         );
     }
 
+    /**
+     * Returns the distance traveled
+     *
+     * @param leimaukset Leimausarray to calculate the distance from
+     */
     static getMatka(leimaukset: Leimaus[]) {
         let matka = 0;
         for (let i = 0; i < leimaukset.length - 1; i++) {
@@ -429,6 +561,9 @@ class util {
         return Math.round(matka * 10) / 10;
     }
 
+    /**
+     * Get the corners to handle the view alignment
+     */
     static getCorners() {
         let tr: number[], bl: number[];
         const cords = karttaRastit.map(e => {
@@ -485,8 +620,18 @@ class util {
             return r.id === rastiID;
         });
     }
+
+    static getTime(date: Date): string {
+        const hours = date.getHours(),
+            minutes = "0" + date.getMinutes(),
+            seconds = "0" + date.getSeconds();
+        return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
+    }
 }
 
+/**
+ * Functions to draw elements
+ */
 class Paper {
     static teamListing(team: Joukkue): DocumentFragment {
         const frag = document.createDocumentFragment(),
@@ -537,15 +682,23 @@ class Paper {
             listItem.classList.add("team-details-item");
             listItem.setAttribute("draggable", "true");
             listItem.textContent = rasti.koodi;
-            rastiTime.textContent = e.aika.toString();
+            rastiTime.textContent = util.getTime(new Date(e.aika));
+            rastiTime.classList.add("text-minor");
             listItem.addEventListener("dragstart", UIhandlers.dragstart_handler);
             listItem.addEventListener("drop", UIhandlers.leimausDrop);
             listItem.addEventListener("dragenter", UIhandlers.leimausDragEnter);
             listItem.addEventListener("dragexit", UIhandlers.leimausDragExit);
+            listItem.appendChild(rastiTime);
             teamList.appendChild(listItem);
         });
-        teamDetails.setAttribute("draggable", "true");
-        teamDetails.addEventListener("dragstart", UIhandlers.dragstart_handler);
+        const endItem = document.createElement("li");
+        endItem.addEventListener("drop", UIhandlers.leimausDrop);
+        endItem.addEventListener("dragenter", UIhandlers.leimausDragEnter);
+        endItem.addEventListener("dragexit", UIhandlers.leimausDragExit);
+        endItem.classList.add("team-details-item", "team-details-item-end");
+        teamList.appendChild(endItem);
+        teamSummary.setAttribute("draggable", "true");
+        teamSummary.addEventListener("dragstart", UIhandlers.dragstart_ParentID);
         frag.appendChild(teamDetails);
         return frag;
     }
