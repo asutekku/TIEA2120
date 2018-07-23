@@ -22,28 +22,24 @@ body {
 
 .upperContainer {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 0px;
+  right: 0px;
   z-index: 50;
+}
+
+
+.cardContainer {
+  overflow:hidden;
 }
 
 .teamContainer {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
   width: 350px;
-  height: 600px;
+  height: calc(100vh - 56px - 36px);
   overflow: scroll;
   border-radius: 2px 2px 0px 0px;
   overflow-x: hidden;
-}
-
-@keyframes teamContainer-hide {
-  0% {
-    height: 600px;
-  }
-  100% {
-    height: 0;
-  }
 }
 
 .hide {
@@ -60,7 +56,7 @@ body {
 
 @keyframes teamContainer-hide {
   0% {
-    height: 600px;
+    height: calc(100vh - 56px - 36px);
   }
   100% {
     height: 0;
@@ -72,7 +68,7 @@ body {
     height: 0;
   }
   100% {
-    height: 600px;
+    height: calc(100vh - 56px - 36px);
   }
 }
 
@@ -203,6 +199,7 @@ body {
                                        supported by Chrome and Opera */
 }
 
+
 .card-header {
   width: 350px;
   background: #4caf50;
@@ -234,7 +231,7 @@ body {
   vertical-align: middle;
 }
 
-.leaflet-marker-icon {
+div.leaflet-marker-icon {
     background: #fff!important;
     border-style:none;
     color: #2d2d2d;
@@ -248,4 +245,27 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     padding-left: 8px!important;
     padding-right: 8px!important;
+}
+
+.team-details-item{
+  height:32px;
+  line-height: 32px;
+}
+
+.bottomLine{
+  border-style: solid!important;
+  border-width: 0px;
+  border-top-width: 2px;
+  border-color: #000!important;;
+}
+
+.text-minor{
+  font-size: 10!important;
+  color: #797979;
+  float:right;
+  padding-right: 20px;
+}
+
+.team-details-item-end {
+  list-style: none
 }
