@@ -4,10 +4,24 @@ import {ListaaJoukkueet} from "./ListaaJoukkueet";
 
 declare var data: any;
 
-export class App extends React.Component {
+export interface AppState {
+    joukkueet: any[];
+}
 
-    state: {
-        joukkueet: any;
+export class App extends React.Component<{}, AppState> {
+
+    createTeam = (teamState: any) => {
+        console.log(teamState);
+        const uusij: any = {};
+        uusij.nimi = teamState.teamNimi;
+        uusij.aika = teamState.creationDate;
+        uusij.sarja = teamState.sarja;
+        uusij.jasenet = teamState.jasenet;
+        uusij.leimaustapa = teamState.leimaustavat;
+        this.setState(prevState => ({
+            joukkueet: [...prevState.joukkueet, uusij]
+        }))
+
     };
 
     constructor(props: any) {
@@ -34,7 +48,9 @@ export class App extends React.Component {
     render() {
         return (
             <div>
-                <LisaaJoukkue/>
+                <LisaaJoukkue
+                    callBack={this.createTeam}>
+                </LisaaJoukkue>
                 <ListaaJoukkueet
                     joukkueet={this.state.joukkueet}>
                 </ListaaJoukkueet>

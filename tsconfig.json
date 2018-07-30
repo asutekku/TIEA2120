@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
-    "outDir": "./viikko5/build/",
+    "outDir": "./viikko3/build/",
     "module": "amd",
     "allowJs": true,
     "target": "es6",
     "removeComments": false,
     "lib" : ["es2017","dom"],
-    "strict": true
+    "strict": false
   },
   "include": [
-    "./viikko5/*"
+    "./viikko3/*"
   ],"exclude": [
-    "./viikko5/build/vt5.js"
+    "./viikko3/build/vt3.js"
   ]
 }

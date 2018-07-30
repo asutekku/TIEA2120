@@ -90,7 +90,7 @@ class UI {
     static setTeamHandlers(): void {
         const teamInput: HTMLInputElement = applicationForm.querySelector("input[name=teamName]");
         const kisaSelect: HTMLSelectElement = <HTMLSelectElement>document.getElementById("kisaSelection");
-        teamInput.onblur = function() {
+        teamInput.onblur = function () {
             if (Validate.teamUnique(teamInput.value)) {
                 teamInput.classList.remove("invalid");
             } else {
@@ -115,7 +115,7 @@ class UI {
         );
         teamInput.addEventListener(
             "invalid",
-            function() {
+            function () {
                 if (!Validate.teamUnique(teamInput.value)) {
                     this.setCustomValidity(`"${teamInput.value}" on jo käytössä, valitse toinen nimi!`);
                 }
@@ -188,7 +188,7 @@ class UI {
             kisaNimi: HTMLInputElement = kisaForm.querySelector("input[name=kisaNimi]");
         kisaNimi.addEventListener(
             "submit",
-            function() {
+            function () {
                 kisaNimi.setCustomValidity("");
                 if (!Validate.kisaUnique(kisaNimi.value)) {
                     kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -198,7 +198,7 @@ class UI {
             },
             false
         );
-        kisaNimi.onblur = function() {
+        kisaNimi.onblur = function () {
             kisaNimi.setCustomValidity("");
             if (!Validate.kisaUnique(kisaNimi.value)) {
                 kisaNimi.setCustomValidity(`"${kisaNimi.value}" on jo käytössä, valitse toinen nimi!`);
@@ -570,6 +570,7 @@ class Validate {
             kisat.push(newKisa);
             dataset.saveKisa(newKisa);
             kisaForm.reset();
+            UI.updateKisaSelect();
         }
         return false;
     }
@@ -614,6 +615,7 @@ class Validate {
     static teamUnique(name: string): boolean {
         return !joukkueet.find(e => e.nimi.toLowerCase() === name.trim().toLowerCase());
     }
+
     /**
      * some helper functions
      */
@@ -622,18 +624,21 @@ class Validate {
             .map(e => (e as HTMLInputElement).value)
             .filter(e => e.trim() !== "");
     }
+
     /**
      * some helper functions
      */
     static getRasti(rastiID: number): Rasti {
         return rastit.find(e => e.id === rastiID);
     }
+
     /**
      * some helper functions
      */
     static getRastiByCode(key: string): Rasti {
         return rastit.find(e => e.koodi === key);
     }
+
     /**
      * some helper functions
      */
@@ -651,12 +656,14 @@ class Validate {
             .filter(e => !isNaN(e.aika));
         return rastitFrom;
     }
+
     /**
      * some helper functions
      */
     static getSarjaByID(id: number): Sarja {
         return sarjat.find(e => e.id === id);
     }
+
     /**
      * some helper functions
      */
@@ -665,6 +672,7 @@ class Validate {
             filled: number = rastiInputs.filter(e => (e as HTMLInputElement).value !== "").length;
         return filled === rastiInputs.length;
     }
+
     /**
      * some helper functions
      */
@@ -674,6 +682,7 @@ class Validate {
         ) as HTMLInputElement).value;
         return sarjat.find(e => e.nimi === sarjaCode);
     }
+
     /**
      * some helper functions
      */
@@ -682,24 +691,28 @@ class Validate {
             .filter(e => (e as HTMLInputElement).checked)
             .map(e => (e as HTMLInputElement).value);
     }
+
     /**
      * some helper functions
      */
     static rastikoodi(koodi): boolean {
         return !!rastit.find(e => e.koodi === koodi);
     }
+
     /**
      * some helper functions
      */
     static kisaUnique(name): boolean {
         return !kisat.find(e => e.nimi.toLowerCase() === name.trim().toLowerCase());
     }
+
     /**
      * some helper functions
      */
     static getKisaById(id): Kisa {
         return kisat.find(e => e.id === id);
     }
+
     /**
      * some helper functions
      */
@@ -709,7 +722,7 @@ class Validate {
             inputKesto: HTMLInputElement = kisaForm.querySelector("input[name=kisaKesto]"),
             start: number = new Date(inputAlku.value).getTime(),
             end: number = new Date(inputLoppu.value).getTime(),
-            length: number = new Date(inputKesto.value).getTime() ? new Date(inputKesto.value).getTime() : 0;
+            length: number = new Date(parseInt(inputKesto.value)).getTime() ? new Date(parseInt(inputKesto.value)).getTime() * 3600 * 1000 : 0;
         inputAlku.setCustomValidity("");
         inputLoppu.setCustomValidity("");
         if (start === null || end === null) {
@@ -719,12 +732,13 @@ class Validate {
         } else if (length === 0 && !(end > start)) {
             inputLoppu.setCustomValidity(`Loppuajan täytyy olla suurempi kuin alkuajan`);
             return false;
-        } else if (length !== 0 && !(end > start + length)) {
+        } else if (length !== 0 && end < (start + length)) {
             inputLoppu.setCustomValidity(`Loppuajan täytyy olla suurempi kuin alkuaika + kisan kesto`);
             return false;
         }
         return true;
     }
+
     /**
      * some helper functions
      */
@@ -732,6 +746,7 @@ class Validate {
         const alku: HTMLInputElement = kisaForm.querySelector("input[name=kisaAlku]");
         return new Date(alku.value).getTime();
     }
+
     /**
      * some helper functions
      */
@@ -739,6 +754,7 @@ class Validate {
         const loppu: HTMLInputElement = kisaForm.querySelector("input[name=kisaLoppu]");
         return new Date(loppu.value).getTime();
     }
+
     /**
      * some helper functions
      */
@@ -759,7 +775,7 @@ class dataset {
             sarja: team.sarja,
             seura: team.seura,
             id: team.id,
-            rastit: team.rastit.map(e => ({ aika: Util.getDate(new Date(e.aika)), id: e.id })),
+            rastit: team.rastit.map(e => ({aika: Util.getDate(new Date(e.aika)), id: e.id})),
             pisteet: team.pisteet,
             matka: team.matka,
             leimaustapa: team.leimaustapa,
@@ -767,7 +783,7 @@ class dataset {
         };
         if (editing) {
             const index = joukkueet
-                .map(function(e) {
+                .map(function (e) {
                     return e.id;
                 })
                 .indexOf(tempID);
@@ -845,6 +861,7 @@ class Rastileimaus {
         this.id = id;
     }
 }
+
 /*
 * Class for Rasti
  */

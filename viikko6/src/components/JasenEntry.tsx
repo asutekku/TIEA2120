@@ -2,9 +2,43 @@ import * as React from "react";
 
 export interface JasenEntryProps {
     jasenNum: number;
+    callBack: any;
+    valid: boolean;
 }
 
-export class JasenEntry extends React.Component<JasenEntryProps, {}> {
+export interface JasenEntryState {
+    value: string;
+    valid: boolean;
+}
+
+export class JasenEntry extends React.Component<JasenEntryProps, JasenEntryState> {
+
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            value: '',
+            valid: false
+        };
+    }
+
+    handleChange = (event: any) => {
+        this.getValidity(event);
+        this.setState({
+            value: event.target.value.toString(),
+        });
+        this.props.callBack(event.target.value);
+    };
+
+    getValidity(event: any): void {
+        console.log(this.state);
+        if (this.props.valid) {
+            event.target.setCustomValidity("");
+            this.setState({valid: true});
+        } else {
+            event.target.setCustomValidity("Syötä vähintään kaksi jäsentä");
+            this.setState({valid: false});
+        }
+    }
 
     render() {
         return <div className="form_row">
@@ -18,7 +52,8 @@ export class JasenEntry extends React.Component<JasenEntryProps, {}> {
                     type="text"
                     id={"jasen_input_" + this.props.jasenNum}
                     name={"jasen_input_" + this.props.jasenNum}
-                    className="textField jasenField"/>
+                    className="textField jasenField"
+                    onBlur={this.handleChange}/>
             </div>
         </div>
     }
