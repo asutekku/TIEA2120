@@ -1,3 +1,173 @@
 .joukkueForm {
-    width: 600px;
+    width: 400px;
+}
+
+input.error {
+    border: 1px red;
+    background: #b39495;
+}
+
+@media screen
+and (min-device-width: 300px)
+and (max-device-width: 1920px)
+and (-webkit-min-device-pixel-ratio: 1) {
+}
+
+#form_addTeam {
+    width: auto;
+}
+
+input {
+    float:right;
+}
+
+.form_innerDiv{
+    float:right;
+    max-width: 400px;
+}
+
+.checkBox {
+    float:right;
+}
+
+.form_innerLabel{
+    float:right;
+}
+
+.form-row {
+    float:left;
+    width: 100%;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+.form_row_inner {
+    float:left;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.textField {
+    width:auto;
+}
+
+.form_label {
+    float:left;
+    width:auto;
+}
+
+.form_innerLabel {
+    float:right!important;
+}
+
+#series {
+    display:flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+}
+
+.form_row_flex {
+    flex: 1 1 160px;
+}
+
+
+@media screen and (max-width: 600px) {
+    .form_row_inner {
+        width:auto;
+        margin-right:0;
+        border:0;
+    }
+    .form_innerDiv {
+        float:left;
+    }
+    .form_data {
+        float:left;
+    }
+    .textField {
+        float:left;
+        width: 100%;
+    }
+}
+
+@media screen and (min-width: 600px){
+    .container {
+        display:flex;
+        flex-direction: row-reverse;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+
+    .formWrap {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    fieldSet.suunnistusFieldset{
+        display:block;
+        height: auto;
+        flex: 1 0 25%;
+    }
+
+    #teamList {
+        height:6em;
+    }
+
+    .container {
+        display: block;
+    }
+
+    .flex-container {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        -ms-box-orient: horizontal;
+        display: -webkit-box;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: -moz-flex;
+        display: -webkit-flex;
+        display: flex;
+    }
+
+    .flex-item {
+        flex: 1 0 20%;
+        width: auto;
+        margin-right: 20px;
+    }
+
+    .wrap {
+        flex-wrap: wrap;
+        flex-direction: column;
+    }
+
+    .flexContainer {
+        display:flex;
+        flex-direction: row-reverse;
+        /*display:grid;
+        grid-column-gap: 5px;
+        grid-template-columns: repeat(3, 1fr);*/
+    }
+}
+
+.smallContainer {
+    float:left;
+}
+
+
+
+.button {
+    float:left;
+}
+
+.errorMessage{
+    color: red;
+}
+
+.invalid {
+    border-color: red;
+}
+
+#kisasarjaList {
+    float:left;
 }

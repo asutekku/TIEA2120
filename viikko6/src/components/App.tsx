@@ -11,17 +11,15 @@ export interface AppState {
 export class App extends React.Component<{}, AppState> {
 
     createTeam = (teamState: any) => {
-        console.log(teamState);
         const uusij: any = {};
-        uusij.nimi = teamState.teamNimi;
-        uusij.aika = teamState.creationDate;
-        uusij.sarja = teamState.sarja;
+        uusij.nimi = teamState.nimi;
+        uusij.aika = teamState.luontiaika ? teamState.luontiaika : null;
+        uusij.sarja = teamState.sarja ? teamState.sarja : null;
         uusij.jasenet = teamState.jasenet;
-        uusij.leimaustapa = teamState.leimaustavat;
+        uusij.leimaustapa = teamState.leimaustavat ? teamState.leimaustavat : null;
         this.setState(prevState => ({
             joukkueet: [...prevState.joukkueet, uusij]
         }))
-
     };
 
     constructor(props: any) {
@@ -48,12 +46,16 @@ export class App extends React.Component<{}, AppState> {
     render() {
         return (
             <div>
-                <LisaaJoukkue
-                    callBack={this.createTeam}>
-                </LisaaJoukkue>
-                <ListaaJoukkueet
-                    joukkueet={this.state.joukkueet}>
-                </ListaaJoukkueet>
+                <div className={'smallContainer'}>
+                    <ListaaJoukkueet
+                        joukkueet={this.state.joukkueet}>
+                    </ListaaJoukkueet>
+                </div>
+                <div className={'smallContainer'}>
+                    <LisaaJoukkue
+                        callBack={this.createTeam}>
+                    </LisaaJoukkue>
+                </div>
             </div>
         );
     }

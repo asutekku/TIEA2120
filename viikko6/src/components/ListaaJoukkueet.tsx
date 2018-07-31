@@ -7,10 +7,11 @@ export interface ListaaJoukkueetProps {
 export class ListaaJoukkueet extends React.Component<ListaaJoukkueetProps, {}> {
 
     render() {
+        const teams = this.props.joukkueet.sort((a, b) => a.nimi.localeCompare(b.nimi));
         return <div className="form_row form_row_inner">
             <h2>Joukkueet</h2>
             <ul>
-                {this.props.joukkueet.map((object, i) => <ObjectRow obj={object} key={i}/>)}
+                {teams.map((object, i) => <ObjectRow obj={object} key={i}/>)}
             </ul>
         </div>
     }
